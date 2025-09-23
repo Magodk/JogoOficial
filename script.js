@@ -3,20 +3,15 @@
 // ==========================================================
 
 // ==========================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORREÇÃO FINAL)
+// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 
-// 1. Importe a função principal para inicializar o app
+// Importa as funções necessárias usando os caminhos de URL
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-// 2. Importe as funções de Autenticação
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-// 3. Importe as funções do Firestore (Banco de Dados)
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-// Sua configuração do Firebase (mantenha a que você já tem)
+// Sua configuração do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
   authDomain: "meu-jogo-online-880e0.firebaseapp.com",
@@ -24,16 +19,20 @@ const firebaseConfig = {
   storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
   messagingSenderId: "604190129868",
   appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
+  measurementId: "G-QM9QYRFX8T"
 };
 
-// Inicialize o Firebase
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
-// Obtenha as instâncias para os serviços que você vai usar
+// Obtenha as instâncias da Autenticação e do Firestore
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Seu código do jogo começa aqui...
+// ==========================================================
+// 2. VARIÁVEIS E ELEMENTOS DO DOM
+// ==========================================================
+// ... todo o restante do seu código JavaScript continua aqui
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM (Sem mudanças aqui, apenas listando)
