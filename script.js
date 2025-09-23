@@ -1,26 +1,24 @@
 // ==========================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORRIGIDO)
+// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORREÇÃO AQUI)
 // ==========================================================
-// 🚩 CORRIGIDO: As importações das bibliotecas de Auth e Firestore foram adicionadas.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ... O restante da sua configuração do Firebase está correta ...
 
+// 🚩 SUBSTITUA ISSO: Cole a configuração do SEU NOVO projeto do Firebase aqui.
 const firebaseConfig = {
-    apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
-    authDomain: "meu-jogo-v2.firebaseapp.com",
-    projectId: "meu-jogo-v2",
-    storageBucket: "meu-jogo-v2.firebasestorage.app",
-    messagingSenderId: "573833700374",
-    appId: "1:573833700374:web:460fdee5567a9565fd4137"
+  apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
+  authDomain: "meu-jogo-v2.firebaseapp.com",
+  projectId: "meu-jogo-v2",
+  storageBucket: "meu-jogo-v2.firebasestorage.app",
+  messagingSenderId: "573833700374",
+  appId: "1:573833700374:web:460fdee5567a9565fd4137"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-// ... O restante do seu código ...
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM
@@ -72,8 +70,7 @@ let expandCost = 100;
 let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
-// 🚩 CORREÇÃO: A constante ADMIN_IDS foi definida aqui.
-// Por favor, substitua os IDs de exemplo pelos IDs reais dos seus administradores.
+// 🚩 SUBSTITUA ISSO: Coloque os IDs dos seus administradores aqui, entre as aspas.
 const ADMIN_IDS = ["id_do_seu_primeiro_admin", "id_do_seu_segundo_admin"];
 
 const treasures = [
@@ -372,7 +369,6 @@ async function saveGame() {
             totalItems: totalItems,
             expandCost: expandCost,
             username: usernameInput.value,
-            // 🚩 CORREÇÃO: A constante ADMIN_IDS agora está definida e a verificação funciona.
             isAdmin: ADMIN_IDS.includes(currentUserId)
         };
         await setDoc(doc(db, "players", currentUserId), userData);
@@ -410,12 +406,8 @@ async function loadGame(userData) {
     }
 }
 
-// 🚩 CORREÇÃO: A função de salvamento ao sair do navegador foi ajustada
 window.addEventListener('beforeunload', async (event) => {
     if (currentUserId) {
-        // Notifique o usuário que o salvamento está em andamento (opcional)
-        // event.returnValue = 'Tem certeza que deseja sair? O seu jogo pode não ser salvo.';
-        // Garante que a chamada para saveGame seja esperada
         await saveGame();
     }
 });
@@ -438,7 +430,6 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    // 🚩 CORREÇÃO: a verificação de admin foi corrigida aqui
                     isAdmin: ADMIN_IDS.includes(currentUserId)
                 };
                 await setDoc(docRef, initialData);
@@ -487,7 +478,6 @@ loginButton.addEventListener("click", async () => {
     }
 });
 
-// 🚩 MELHORIA: A função de logout foi alterada para salvar o jogo antes de sair.
 logoutButton.addEventListener("click", async () => {
     try {
         if (currentUserId) {
@@ -717,9 +707,8 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
-// 🚩 MELHORIA: Salvamento automático a cada minuto
 setInterval(() => {
     if (currentUserId) {
         saveGame();
     }
-}, 60000); // Salva o jogo a cada 60 segundos
+}, 60000);
