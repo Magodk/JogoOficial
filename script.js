@@ -32,7 +32,7 @@ const closePurchaseButton = document.getElementById("close-purchase-button");
 const purchaseImg = document.getElementById("purchase-img");
 const purchaseName = document.getElementById("purchase-name");
 const purchaseValue = document.getElementById("purchase-value");
-const purchaseAuria = document.getElementById("purchase-auria");
+const purchaseAuria = document = document.getElementById("purchase-auria");
 const buyButton = document.getElementById("buy-button");
 
 // Modal de informações do inventário
@@ -240,7 +240,10 @@ function selectPlayer(accountId, username) {
             <input type="number" id="increase-capacity-input" placeholder="Aumentar em (ex: 10)">
             <button id="increase-capacity-button" class="admin-action-button">Aumentar</button>
         </div>
-
+        <div id="admin-player-inventory-view">
+            <h4>Inventário</h4>
+            <div id="admin-inventory-items" class="inventory-items"></div>
+        </div>
     `;
 
     populateTreasureSelect();
@@ -705,7 +708,7 @@ function updateInventoryUI() {
 
     } else {
         expandButton.style.display = "block";
-        logoutButton.style.display = "block";
+        // O logoutButton é agora adicionado via JS em loadGame()
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
 
