@@ -97,6 +97,7 @@ const playerDetailsScore = document.getElementById("player-details-score");
 const adminInventoryItems = document.getElementById("admin-inventory-items");
 const adminFeedbackMessage = document.getElementById("admin-feedback-message");
 const refreshPlayerListButton = document.getElementById("refresh-player-list");
+const actionButtonsContainer = document.querySelector('.action-buttons');
 
 // NOVOS BOTÕES ADMIN
 const deleteAccountButton = document.createElement("button");
@@ -452,8 +453,9 @@ function loadGame(userData) {
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
+    // Lógica corrigida para adicionar o botão Admin
     if (ADMIN_IDS.includes(userData.id)) {
-        gameArea.appendChild(openAdminPanelButton);
+        actionButtonsContainer.appendChild(openAdminPanelButton);
     } else {
         if (openAdminPanelButton.parentNode) {
             openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
@@ -691,7 +693,7 @@ function updateInventoryUI() {
 
     } else {
         expandButton.style.display = "block";
-        logoutButton.style.display = "block";
+        // O logoutButton é agora adicionado via JS em loadGame()
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
 

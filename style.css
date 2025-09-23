@@ -107,8 +107,7 @@ body {
     height: 90vh;
     border: 5px solid #fff;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column; /* Alterado para column */
     background-color: #1c1c1c;
     overflow: hidden;
 }
@@ -119,18 +118,39 @@ body {
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column; /* Alterado para column */
 }
 
-/* Mochila no canto inferior direito */
-.inventory-button {
+/* Novo: Container para o placar e botões de ação */
+.ui-top-bar {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    z-index: 1001;
+}
+
+.score-board {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.inventory-button {
     background: none;
     border: none;
     cursor: pointer;
-    z-index: 1001;
 }
 
 .inventory-img {
@@ -140,12 +160,12 @@ body {
 
 /* Esteira */
 .conveyor-belt {
-    width: 25%;
+    width: 100%;
+    height: 100%;
     background-color: #c0392b;
-    border-radius: 10px;
     position: relative;
     overflow: hidden;
-    margin-left: 5px;
+    margin-top: 80px; /* Espaço para a barra superior */
 }
 
 /* Tesouros com brilho */
@@ -188,19 +208,19 @@ body {
 
 /* Inventário */
 .inventory-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 200%;
-    max-width: 300px;
-    height: 400px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 400px; /* Aumentado para melhor visualização */
+    height: 100vh;
     background-color: #34495e;
     color: white;
-    padding: 10px;
+    padding: 20px;
     box-shadow: -5px 0 10px rgba(0,0,0,0.2);
-    transform: translateX(120%);
+    transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
-    z-index: 1000;
+    z-index: 3000;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -366,9 +386,9 @@ button#buy-button, #sell-button, #expand-capacity {
 /* Responsivo */
 @media (max-width: 480px) {
     .game-border { max-width: 95%; height: 95vh; }
-    .conveyor-belt { width: 25%; }
-    .inventory-container { width: 40%; }
-    .inventory-button { width:50px; height:50px; }
+    .conveyor-belt { width: 100%; }
+    .inventory-container { width: 100%; max-width: none; }
+    .inventory-button { width: 50px; height: 50px; }
 }
 
 /* Adicionado: Estilos para o menu de informações do jogador */
@@ -497,6 +517,12 @@ button#buy-button, #sell-button, #expand-capacity {
     color: white;
 }
 
+.admin-action-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 .admin-action-button {
     width: 100%;
     padding: 8px;
@@ -505,12 +531,6 @@ button#buy-button, #sell-button, #expand-capacity {
     cursor: pointer;
     font-weight: bold;
     color: white;
-}
-
-.admin-actions-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
 }
 
 .delete-account-button {
@@ -548,10 +568,6 @@ button#buy-button, #sell-button, #expand-capacity {
 
 /* Novo estilo para o botão Admin na tela do jogo */
 .admin-button {
-    position: absolute;
-    bottom: 80px; 
-    right: 10px;
-    z-index: 1002;
     background-color: #c0392b;
     color: white;
     width: 60px;
