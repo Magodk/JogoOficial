@@ -9,13 +9,13 @@ import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, dele
 
 // SUAS CONFIGURAÇÕES DO FIREBASE (Copie do painel)
 const firebaseConfig = {
-    apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
-    authDomain: "meu-jogo-online-880e0.firebaseapp.com",
-    projectId: "meu-jogo-online-880e0",
-    storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
-    messagingSenderId: "604190129868",
-    appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
-    measurementId: "G-QM9QYRFX8T"
+  apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
+  authDomain: "meu-jogo-online-880e0.firebaseapp.com",
+  projectId: "meu-jogo-online-880e0",
+  storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
+  messagingSenderId: "604190129868",
+  appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
+  measurementId: "G-QM9QYRFX8T"
 };
 
 // Inicializa o Firebase
