@@ -26,34 +26,29 @@
             <div class="game-container">
                 <div id="conveyor-belt" class="conveyor-belt"></div>
 
-                <div class="ui-top-bar">
-                    <div class="score-board">
-                        <p>Moedas: <span id="score">0</span></p>
+                <button id="inventory-button" class="inventory-button">
+                    <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
+                </button>
+
+                <div id="game-action-buttons"></div>
+
+                <div id="inventory-container" class="inventory-container">
+                    <div class="inventory-header">
+                        <h2>Inventário</h2>
+                        <button id="close-inventory" class="button close-button">X</button>
                     </div>
-                    <div class="action-buttons">
-                        <button id="inventory-button" class="inventory-button">
-                            <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
-                        </button>
-                        </div>
+                    <p class="score-display">Moedas: <span id="score">0</span></p>
+                    <p class="username-display">Usuário: <span id="username-display"></span></p>
+                    <p class="account-id">ID da Conta: <span id="account-id-display"></span></p>
+                    <div id="inventory-items" class="inventory-items"></div>
+                    <div id="capacity-bar">
+                        <div id="capacity-fill"></div>
+                    </div>
+                    <p>Capacidade: <span id="total-items">0</span>/<span id="max-capacity">20</span></p>
+                    <button id="expand-capacity" class="button">Aumentar Capacidade (100 moedas)</button>
+                    <button id="logout-button" class="logout-button">Sair da Conta</button>
                 </div>
             </div>
-        </div>
-
-        <div id="inventory-container" class="inventory-container">
-            <div class="inventory-header">
-                <h2>Inventário</h2>
-                <button id="close-inventory" class="button close-button">X</button>
-            </div>
-            <p class="score-display">Moedas: <span id="score">0</span></p>
-            <p class="username-display">Usuário: <span id="username-display"></span></p>
-            <p class="account-id">ID da Conta: <span id="account-id-display"></span></p>
-            <div id="inventory-items" class="inventory-items"></div>
-            <div id="capacity-bar">
-                <div id="capacity-fill"></div>
-            </div>
-            <p>Capacidade: <span id="total-items">0</span>/<span id="max-capacity">20</span></p>
-            <button id="expand-capacity" class="button">Aumentar Capacidade (100 moedas)</button>
-            <button id="logout-button" class="logout-button">Sair da Conta</button>
         </div>
         
         <div id="new-admin-panel" class="new-admin-panel hidden">

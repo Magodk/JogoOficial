@@ -24,6 +24,7 @@ const expandButton = document.getElementById("expand-capacity");
 // Elementos do placar e ID
 const usernameDisplay = document.getElementById("username-display");
 const accountIdDisplay = document.getElementById("account-id-display");
+const gameActionButtons = document.getElementById("game-action-buttons");
 
 // Modal de compra
 const purchaseModal = document.getElementById("treasure-purchase-modal");
@@ -97,7 +98,6 @@ const playerDetailsScore = document.getElementById("player-details-score");
 const adminInventoryItems = document.getElementById("admin-inventory-items");
 const adminFeedbackMessage = document.getElementById("admin-feedback-message");
 const refreshPlayerListButton = document.getElementById("refresh-player-list");
-const actionButtonsContainer = document.querySelector('.action-buttons');
 
 // NOVOS BOTÕES ADMIN
 const deleteAccountButton = document.createElement("button");
@@ -453,12 +453,17 @@ function loadGame(userData) {
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
-    // Lógica corrigida para adicionar o botão Admin
-    if (ADMIN_IDS.includes(userData.id)) {
-        actionButtonsContainer.appendChild(openAdminPanelButton);
-    } else {
-        if (openAdminPanelButton.parentNode) {
-            openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
+    // Lógica para adicionar os botões de ação na nova div
+    if (gameActionButtons) {
+        // Limpa os botões existentes
+        gameActionButtons.innerHTML = '';
+        
+        // Adiciona o botão de logout
+        gameActionButtons.appendChild(logoutButton);
+
+        // Adiciona o botão de admin se o usuário for um administrador
+        if (ADMIN_IDS.includes(userData.id)) {
+            gameActionButtons.appendChild(openAdminPanelButton);
         }
     }
 
@@ -563,15 +568,19 @@ registerButton.addEventListener("click", () => {
     }
 });
 
+// Ações do botão de logout no inventário
 logoutButton.addEventListener("click", () => {
     localStorage.setItem('onlineStatus-' + accountIdDisplay.textContent, 'false');
     saveGame();
     loginPanel.classList.remove("hidden");
     gameArea.classList.add("hidden");
     newAdminPanel.classList.add("hidden");
-    if (openAdminPanelButton.parentNode) {
-        openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
+    
+    // Remove os botões de ação da tela do jogo
+    if (gameActionButtons) {
+        gameActionButtons.innerHTML = '';
     }
+
     usernameInput.value = "";
     passwordInput.value = "";
     clearLogin();
@@ -687,13 +696,16 @@ function updateInventoryUI() {
         }
         
         document.querySelector("#inventory-container .inventory-header h2").textContent = "Inventário (Visualização)";
-        document.querySelector("#inventory-container p.score-display").textContent = "Moedas: " + Math.floor(score);
-        document.querySelector("#inventory-container p.username-display").textContent = "Usuário: " + usernameDisplay.textContent;
-        document.querySelector("#inventory-container p.account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
+        document.querySelector("#inventory-container .score-display").textContent = "Moedas: " + Math.floor(score);
+        document.querySelector("#inventory-container .username-display").textContent = "Usuário: " + usernameDisplay.textContent;
+        document.querySelector("#inventory-container .account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
+        document.querySelector("#inventory-container p.score-display").style.display = 'block'; // Garante que a pontuação é visível
+        document.querySelector("#inventory-container p.username-display").style.display = 'block';
+        document.querySelector("#inventory-container p.account-id").style.display = 'block';
 
     } else {
         expandButton.style.display = "block";
-        // O logoutButton é agora adicionado via JS em loadGame()
+        logoutButton.style.display = "block";
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
 
@@ -701,6 +713,9 @@ function updateInventoryUI() {
         document.querySelector("#inventory-container p.score-display").textContent = `Moedas: ${Math.floor(score)}`;
         document.querySelector("#inventory-container p.username-display").textContent = `Usuário: ${usernameInput.value}`;
         document.querySelector("#inventory-container p.account-id").textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
+        document.querySelector("#inventory-container p.score-display").style.display = 'block';
+        document.querySelector("#inventory-container p.username-display").style.display = 'block';
+        document.querySelector("#inventory-container p.account-id").style.display = 'block';
     }
     
     scoreDisplay.textContent = Math.floor(score);
