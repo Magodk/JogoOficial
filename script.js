@@ -24,7 +24,6 @@ const expandButton = document.getElementById("expand-capacity");
 // Elementos do placar e ID
 const usernameDisplay = document.getElementById("username-display");
 const accountIdDisplay = document.getElementById("account-id-display");
-const gameActionButtons = document.getElementById("game-action-buttons");
 
 // Modal de compra
 const purchaseModal = document.getElementById("treasure-purchase-modal");
@@ -240,10 +239,7 @@ function selectPlayer(accountId, username) {
             <input type="number" id="increase-capacity-input" placeholder="Aumentar em (ex: 10)">
             <button id="increase-capacity-button" class="admin-action-button">Aumentar</button>
         </div>
-        <div id="admin-player-inventory-view">
-            <h4>Inventário</h4>
-            <div id="admin-inventory-items" class="inventory-items"></div>
-        </div>
+
     `;
 
     populateTreasureSelect();
@@ -450,14 +446,12 @@ function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
     
-    // Atualiza a exibição de dados do usuário
     usernameDisplay.textContent = usernameInput.value;
     accountIdDisplay.textContent = userData.id;
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
-    // Lógica para adicionar o botão de admin
     if (ADMIN_IDS.includes(userData.id)) {
         gameArea.appendChild(openAdminPanelButton);
     } else {
@@ -549,7 +543,7 @@ registerButton.addEventListener("click", () => {
             id: generateId()
         };
 
-        if (username === "admin" && password === "acesso") {
+        if (username === "admin2" && password === "acesso") {
             initialData.id = "WHZTUDRF";
         }
 

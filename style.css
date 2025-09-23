@@ -12,7 +12,7 @@ body {
     align-items: center;
     min-height: 100vh;
     width: 100%;
-    /* Removido: overflow: hidden; */ 
+    overflow: hidden; 
     background-color: #000;
     color: #fff;
 }
@@ -125,7 +125,7 @@ body {
 /* Mochila no canto inferior direito */
 .inventory-button {
     position: absolute;
-    bottom: 20px; /* Aumentado em 10px */
+    bottom: 10px;
     right: 10px;
     background: none;
     border: none;
@@ -136,51 +136,6 @@ body {
 .inventory-img {
     width: 60px;
     height: 60px;
-}
-
-/* Botões de Ação na tela do jogo (admin e logout) */
-#game-action-buttons {
-    position: absolute;
-    bottom: 90px; /* Aumentado em 20px */
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    z-index: 1001;
-}
-
-/* Estilos do botão admin */
-.admin-button {
-    background-color: #c0392b;
-    color: white;
-    width: 60px;
-    height: 30px;
-    padding: 0; 
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Estilos do botão de Sair */
-.logout-button {
-    background-color: #e74c3c;
-    color: white;
-    width: 60px;
-    height: 30px;
-    padding: 0;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 /* Esteira */
@@ -397,15 +352,24 @@ button#buy-button, #sell-button, #expand-capacity {
     margin-top:5px;
 }
 
+/* Botão de Sair */
+.logout-button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
 /* Responsivo */
 @media (max-width: 480px) {
     .game-border { max-width: 95%; height: 95vh; }
-    .conveyor-belt { width: 40%; }
-    .inventory-container { max-width: 90%; }
+    .conveyor-belt { width: 25%; }
+    .inventory-container { width: 40%; }
     .inventory-button { width:50px; height:50px; }
-    .inventory-img { width: 50px; height: 50px; }
 }
-
 
 /* Adicionado: Estilos para o menu de informações do jogador */
 .menu-area {
@@ -533,12 +497,6 @@ button#buy-button, #sell-button, #expand-capacity {
     color: white;
 }
 
-.admin-action-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
 .admin-action-button {
     width: 100%;
     padding: 8px;
@@ -547,6 +505,12 @@ button#buy-button, #sell-button, #expand-capacity {
     cursor: pointer;
     font-weight: bold;
     color: white;
+}
+
+.admin-actions-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .delete-account-button {
@@ -580,4 +544,25 @@ button#buy-button, #sell-button, #expand-capacity {
     color: #e74c3c;
     text-align: center;
     margin-top: 5px; /* Espaçamento reduzido */
+}
+
+/* Novo estilo para o botão Admin na tela do jogo */
+.admin-button {
+    position: absolute;
+    bottom: 80px; 
+    right: 10px;
+    z-index: 1002;
+    background-color: #c0392b;
+    color: white;
+    width: 60px;
+    height: 30px;
+    padding: 0; 
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
