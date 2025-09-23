@@ -24,7 +24,7 @@ const expandButton = document.getElementById("expand-capacity");
 // Elementos do placar e ID
 const usernameDisplay = document.getElementById("username-display");
 const accountIdDisplay = document.getElementById("account-id-display");
-const gameActionButtons = document.getElementById("game-action-buttons");
+const gameActionButtons = document.querySelector('.action-buttons'); // Seleciona o novo container de botões
 
 // Modal de compra
 const purchaseModal = document.getElementById("treasure-purchase-modal");
@@ -460,13 +460,17 @@ function loadGame(userData) {
     if (gameActionButtons) {
         // Limpa os botões existentes
         gameActionButtons.innerHTML = '';
-        
+
         // Adiciona o botão de logout
-        gameActionButtons.appendChild(logoutButton);
+        const logoutButtonClone = logoutButton.cloneNode(true);
+        logoutButtonClone.id = "logout-in-game";
+        gameActionButtons.appendChild(logoutButtonClone);
 
         // Adiciona o botão de admin se o usuário for um administrador
         if (ADMIN_IDS.includes(userData.id)) {
-            gameActionButtons.appendChild(openAdminPanelButton);
+            const openAdminButtonClone = openAdminPanelButton.cloneNode(true);
+            openAdminButtonClone.id = "admin-in-game";
+            gameActionButtons.appendChild(openAdminButtonClone);
         }
     }
 
@@ -686,7 +690,10 @@ function updateInventoryUI() {
 
     if (isViewingOtherPlayer) {
         expandButton.style.display = "none";
-        logoutButton.style.display = "none";
+        // Remove os botões de ação para visualização de outro jogador
+        if (gameActionButtons) {
+             gameActionButtons.innerHTML = '';
+        }
 
         let backButton = document.getElementById("back-button");
         if (!backButton) {
@@ -702,13 +709,21 @@ function updateInventoryUI() {
         document.querySelector("#inventory-container .score-display").textContent = "Moedas: " + Math.floor(score);
         document.querySelector("#inventory-container .username-display").textContent = "Usuário: " + usernameDisplay.textContent;
         document.querySelector("#inventory-container .account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
-        document.querySelector("#inventory-container p.score-display").style.display = 'block'; // Garante que a pontuação é visível
+        document.querySelector("#inventory-container p.score-display").style.display = 'block'; 
         document.querySelector("#inventory-container p.username-display").style.display = 'block';
         document.querySelector("#inventory-container p.account-id").style.display = 'block';
 
     } else {
         expandButton.style.display = "block";
-        // O logoutButton é agora adicionado via JS em loadGame()
+        // Recria os botões de ação quando não está no modo de visualização
+        if (gameActionButtons) {
+            gameActionButtons.innerHTML = '';
+            gameActionButtons.appendChild(logoutButton);
+            if (ADMIN_IDS.includes(accountIdDisplay.textContent)) {
+                gameActionButtons.appendChild(openAdminPanelButton);
+            }
+        }
+        
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
 

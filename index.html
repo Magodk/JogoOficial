@@ -24,13 +24,18 @@
     <div id="game-area" class="game-area hidden">
         <div class="game-border">
             <div class="game-container">
+                <div class="ui-top-bar">
+                    <div class="score-board">
+                        <p>Moedas: <span id="score">0</span></p>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="inventory-button" class="inventory-button">
+                            <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
+                        </button>
+                    </div>
+                </div>
+
                 <div id="conveyor-belt" class="conveyor-belt"></div>
-
-                <button id="inventory-button" class="inventory-button">
-                    <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
-                </button>
-
-                <div id="game-action-buttons"></div>
 
                 <div id="inventory-container" class="inventory-container">
                     <div class="inventory-header">
