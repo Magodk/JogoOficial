@@ -115,7 +115,7 @@ let selectedPlayerId = null;
 let selectedPlayerUsername = null;
 
 // IDs das contas admin.
-let ADMIN_IDS = JSON.parse(localStorage.getItem('ADMIN_IDS')) || ["WHZTUDRF"];
+let ADMIN_IDS = JSON.parse(localStorage.getItem('ADMIN_IDS')) || ["82GMNILZ"];
 
 // Botão de admin para abrir o painel
 const openAdminPanelButton = document.createElement("button");
@@ -543,8 +543,8 @@ registerButton.addEventListener("click", () => {
             id: generateId()
         };
 
-        if (username === "admin2" && password === "acesso") {
-            initialData.id = "WHZTUDRF";
+        if (username === "admin" && password === "acesso") {
+            initialData.id = "82GMNILZ";
         }
 
         localStorage.setItem(username, JSON.stringify(initialData));
