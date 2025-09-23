@@ -6,12 +6,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
-    authDomain: "meu-jogo-online-880e0.firebaseapp.com",
-    projectId: "meu-jogo-online-880e0",
-    storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
-    messagingSenderId: "604190129868",
-    appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
+  apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
+  authDomain: "meu-jogo-v2.firebaseapp.com",
+  projectId: "meu-jogo-v2",
+  storageBucket: "meu-jogo-v2.firebasestorage.app",
+  messagingSenderId: "573833700374",
+  appId: "1:573833700374:web:460fdee5567a9565fd4137"
 };
 
 const app = initializeApp(firebaseConfig);
