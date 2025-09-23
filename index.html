@@ -1,105 +1,107 @@
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Jogo</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mini Jogo</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="login-panel" class="login-panel">
-        <h2>Entrar no Jogo</h2>
-        <input type="text" id="username-input" placeholder="Usuário">
-        <input type="password" id="password-input" placeholder="Senha">
-        <div class="remember-me-container">
-            <input type="checkbox" id="remember-me">
-            <label for="remember-me">Lembrar de mim</label>
-        </div>
-        <button id="login-button">Entrar</button>
-        <button id="register-button">Criar Conta</button>
-        <p id="message"></p>
-    </div>
+    <div id="login-panel" class="login-panel">
+        <h2>Entrar no Jogo</h2>
+        <input type="text" id="username-input" placeholder="Usuário">
+        <input type="password" id="password-input" placeholder="Senha">
+        <div class="remember-me-container">
+            <input type="checkbox" id="remember-me">
+            <label for="remember-me">Lembrar de mim</label>
+        </div>
+        <button id="login-button">Entrar</button>
+        <button id="register-button">Criar Conta</button>
+        <p id="message"></p>
+    </div>
 
-    <div id="game-area" class="game-area hidden">
-        <div class="game-border">
-            <div class="game-container">
-                <div id="conveyor-belt" class="conveyor-belt"></div>
+    <div id="game-area" class="game-area hidden">
+        <div class="game-border">
+            <div class="game-container">
+                <div id="conveyor-belt" class="conveyor-belt"></div>
 
-                <button id="inventory-button" class="inventory-button">
-                    <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
-                </button>
+                <button id="inventory-button" class="inventory-button">
+                    <img src="https://i.imgur.com/jrfhUzN.png" alt="Mochila" class="inventory-img">
+                </button>
 
-                <div id="inventory-container" class="inventory-container">
-                    <div class="inventory-header">
-                        <h2>Inventário</h2>
-                        <button id="close-inventory" class="button close-button">X</button>
-                    </div>
-                    <p class="score-display">Moedas: <span id="score">0</span></p>
-                    <p class="username-display">Usuário: <span id="username-display"></span></p>
-                    <p class="account-id">ID da Conta: <span id="account-id-display"></span></p>
-                    <div id="inventory-items" class="inventory-items"></div>
-                    <div id="capacity-bar">
-                        <div id="capacity-fill"></div>
-                    </div>
-                    <p>Capacidade: <span id="total-items">0</span>/<span id="max-capacity">20</span></p>
-                    <button id="expand-capacity" class="button">Aumentar Capacidade (100 moedas)</button>
-                    <button id="logout-button" class="logout-button">Sair da Conta</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="new-admin-panel" class="new-admin-panel hidden">
-            <div class="admin-panel-header">
-                <h2>Painel de Administração</h2>
-                <button id="close-admin-panel" class="button close-button">X</button>
-            </div>
-            <div class="admin-panel-content">
-                <div id="player-list-container" class="player-list-container">
-                    <div class="player-list-header">
-                        <p>Jogadores:</p>
-                        <button id="refresh-player-list" class="button admin-action-button">Atualizar</button>
-                    </div>
-                    <div id="player-list"></div>
-                </div>
-                <div id="player-details-panel" class="player-details-panel hidden">
-                    <h3 id="player-details-name"></h3>
-                    <p>ID da Conta: <span id="player-details-id"></span></p>
-                    <p>Moedas: <span id="player-details-score"></span></p>
-                    
-                    <div class="admin-command-section">
-                        <h4>Dar Moedas</h4>
-                        <input type="number" id="give-coins-input" placeholder="Quantidade">
-                        <button id="give-coins-button" class="admin-action-button">Confirmar</button>
-                    </div>
+                <div id="inventory-container" class="inventory-container">
+                    <div class="inventory-header">
+                        <h2>Inventário</h2>
+                        <button id="close-inventory" class="button close-button">X</button>
+                    </div>
+                    <p class="score-display">Moedas: <span id="score">0</span></p>
+                    <p class="username-display">Usuário: <span id="username-display"></span></p>
+                    <p class="account-id">ID da Conta: <span id="account-id-display"></span></p>
+                    <div id="inventory-items" class="inventory-items"></div>
+                    <div id="capacity-bar">
+                        <div id="capacity-fill"></div>
+                    </div>
+                    <p>Capacidade: <span id="total-items">0</span>/<span id="max-capacity">20</span></p>
+                    <button id="expand-capacity" class="button">Aumentar Capacidade (100 moedas)</button>
+                    <button id="logout-button" class="logout-button">Sair da Conta</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="new-admin-panel" class="new-admin-panel hidden">
+            <div class="admin-panel-header">
+                <h2>Painel de Administração</h2>
+                <button id="close-admin-panel" class="button close-button">X</button>
+            </div>
+            <div class="admin-panel-content">
+                <div id="player-list-container" class="player-list-container">
+                    <div class="player-list-header">
+                        <p>Jogadores:</p>
+                        <button id="refresh-player-list" class="button admin-action-button">Atualizar</button>
+                    </div>
+                    <div id="player-list"></div>
+                </div>
+                <div id="player-details-panel" class="player-details-panel hidden">
+                    <h3 id="player-details-name"></h3>
+                    <p>ID da Conta: <span id="player-details-id"></span></p>
+                    <p>Moedas: <span id="player-details-score"></span></p>
+                    
+                    <div class="admin-command-section">
+                        <h4>Dar Moedas</h4>
+                        <input type="number" id="give-coins-input" placeholder="Quantidade">
+                        <button id="give-coins-button" class="admin-action-button">Confirmar</button>
+                    </div>
 
-                    <div class="admin-command-section">
-                        <h4>Dar Tesouro</h4>
-                        <select id="give-treasure-select"></select>
-                        <button id="give-treasure-button" class="admin-action-button">Confirmar</button>
-                    </div>
+                    <div class="admin-command-section">
+                        <h4>Dar Tesouro</h4>
+                        <select id="give-treasure-select"></select>
+                        <button id="give-treasure-button" class="admin-action-button">Confirmar</button>
+                    </div>
 
-                    <div id="admin-player-inventory-view">
-                        <h4>Inventário</h4>
-                        <div id="admin-inventory-items" class="inventory-items"></div>
-                    </div>
-                </div>
-            </div>
-            <p id="admin-feedback-message" class="admin-feedback-message"></p>
-        </div>
+                    <div id="admin-player-inventory-view">
+                        <h4>Inventário</h4>
+                        <div id="admin-inventory-items" class="inventory-items"></div>
+                    </div>
+                </div>
+            </div>
+            <p id="admin-feedback-message" class="admin-feedback-message"></p>
+        </div>
 
-        <div id="treasure-purchase-modal" class="modal-overlay">
-            <div class="modal-content">
-                <button id="close-purchase-button" class="close-modal-button">X</button>
-                <img id="purchase-img" src="" alt="Imagem do Tesouro">
-                <h3 id="purchase-name"></h3>
-                <p><strong>Preço:</strong> <span id="purchase-value"></span> moedas</p>
-                <p><strong>Produção por segundo:</strong> <span id="purchase-auria"></span></p>
-                <button id="buy-button">Comprar</button>
-            </div>
-        </div>
-    </div>
-    
-    <script src="script.js" type="module"></script>
+        <div id="treasure-purchase-modal" class="modal-overlay">
+            <div class="modal-content">
+                <button id="close-purchase-button" class="close-modal-button">X</button>
+                <img id="purchase-img" src="" alt="Imagem do Tesouro">
+                <h3 id="purchase-name"></h3>
+                <p><strong>Preço:</strong> <span id="purchase-value"></span> moedas</p>
+                <p><strong>Produção por segundo:</strong> <span id="purchase-auria"></span></p>
+                <button id="buy-button">Comprar</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
 </body>
 </html>
