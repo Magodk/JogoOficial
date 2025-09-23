@@ -1,23 +1,25 @@
 // ==========================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (COMPLETO E CORRETO)
+// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORRIGIDO)
 // ==========================================================
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// 🚩 CORREÇÃO: Importações das bibliotecas de Auth e Firestore foram adicionadas
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+// Sua configuração do app web do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
-  authDomain: "meu-jogo-v2.firebaseapp.com",
-  projectId: "meu-jogo-v2",
-  storageBucket: "meu-jogo-v2.firebasestorage.app",
-  messagingSenderId: "573833700374",
-  appId: "1:573833700374:web:460fdee5567a9565fd4137"
+    apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
+    authDomain: "meu-jogo-v2.firebaseapp.com",
+    projectId: "meu-jogo-v2",
+    storageBucket: "meu-jogo-v2.firebasestorage.app",
+    messagingSenderId: "573833700374",
+    appId: "1:573833700374:web:460fdee5567a9565fd4137"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM
