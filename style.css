@@ -125,7 +125,7 @@ body {
 /* Mochila no canto inferior direito */
 .inventory-button {
     position: absolute;
-    bottom: 10px;
+    bottom: 20px; /* Aumentado em 10px */
     right: 10px;
     background: none;
     border: none;
@@ -141,7 +141,7 @@ body {
 /* Botões de Ação na tela do jogo (admin e logout) */
 #game-action-buttons {
     position: absolute;
-    bottom: 80px;
+    bottom: 90px; /* Aumentado em 20px */
     right: 10px;
     display: flex;
     flex-direction: column;
