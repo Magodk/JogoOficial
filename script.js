@@ -2,37 +2,27 @@
 // 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 
-// ==========================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
-// ==========================================================
-
-// Importa as funções necessárias usando os caminhos de URL
+// Importa as funções necessárias dos SDKs do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Sua configuração do Firebase
+// SUAS CONFIGURAÇÕES DO FIREBASE (Copie do painel)
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
-  authDomain: "meu-jogo-online-880e0.firebaseapp.com",
-  projectId: "meu-jogo-online-880e0",
-  storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
-  messagingSenderId: "604190129868",
-  appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
-  measurementId: "G-QM9QYRFX8T"
+  apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
+  authDomain: "meu-jogo-online-880e0.firebaseapp.com",
+  projectId: "meu-jogo-online-880e0",
+  storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
+  messagingSenderId: "604190129868",
+  appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
+  measurementId: "G-QM9QYRFX8T"
 };
 
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
-
-// Obtenha as instâncias da Autenticação e do Firestore
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-// ==========================================================
-// 2. VARIÁVEIS E ELEMENTOS DO DOM
-// ==========================================================
-// ... todo o restante do seu código JavaScript continua aqui
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM (Sem mudanças aqui, apenas listando)
