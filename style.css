@@ -12,7 +12,7 @@ body {
     align-items: center;
     min-height: 100vh;
     width: 100%;
-    overflow: hidden; 
+    /* Removido: overflow: hidden; */ 
     background-color: #000;
     color: #fff;
 }
