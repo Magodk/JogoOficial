@@ -2,27 +2,38 @@
 // 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// ==========================================================
+// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORREÇÃO FINAL)
+// ==========================================================
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 1. Importe a função principal para inicializar o app
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+// 2. Importe as funções de Autenticação
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// 3. Importe as funções do Firestore (Banco de Dados)
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+// Sua configuração do Firebase (mantenha a que você já tem)
 const firebaseConfig = {
-  apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
-  authDomain: "meu-jogo-online-880e0.firebaseapp.com",
-  projectId: "meu-jogo-online-880e0",
-  storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
-  messagingSenderId: "604190129868",
-  appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
-  measurementId: "G-QM9QYRFX8T"
+  apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
+  authDomain: "meu-jogo-online-880e0.firebaseapp.com",
+  projectId: "meu-jogo-online-880e0",
+  storageBucket: "meu-jogo-online-880e0.firebasestorage.app",
+  messagingSenderId: "604190129868",
+  appId: "1:604190129868:web:4c45c49f5bd1b3c0718c69",
 };
 
-// Initialize Firebase
+// Inicialize o Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Obtenha as instâncias para os serviços que você vai usar
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Seu código do jogo começa aqui...
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM (Sem mudanças aqui, apenas listando)
