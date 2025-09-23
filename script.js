@@ -2,12 +2,14 @@
 // 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 
-// Importa as funções necessárias dos SDKs do Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// SUAS CONFIGURAÇÕES DO FIREBASE (Copie do painel)
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
   authDomain: "meu-jogo-online-880e0.firebaseapp.com",
@@ -18,10 +20,9 @@ const firebaseConfig = {
   measurementId: "G-QM9QYRFX8T"
 };
 
-// Inicializa o Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
 // ==========================================================
 // 2. VARIÁVEIS E ELEMENTOS DO DOM (Sem mudanças aqui, apenas listando)
