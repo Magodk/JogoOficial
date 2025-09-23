@@ -24,7 +24,7 @@ const expandButton = document.getElementById("expand-capacity");
 // Elementos do placar e ID
 const usernameDisplay = document.getElementById("username-display");
 const accountIdDisplay = document.getElementById("account-id-display");
-const gameActionButtons = document.querySelector('.action-buttons'); // Seleciona o novo container de botões
+const gameActionButtons = document.getElementById("game-action-buttons");
 
 // Modal de compra
 const purchaseModal = document.getElementById("treasure-purchase-modal");
@@ -32,7 +32,7 @@ const closePurchaseButton = document.getElementById("close-purchase-button");
 const purchaseImg = document.getElementById("purchase-img");
 const purchaseName = document.getElementById("purchase-name");
 const purchaseValue = document.getElementById("purchase-value");
-const purchaseAuria = document = document.getElementById("purchase-auria");
+const purchaseAuria = document.getElementById("purchase-auria");
 const buyButton = document.getElementById("buy-button");
 
 // Modal de informações do inventário
@@ -450,27 +450,19 @@ function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
     
+    // Atualiza a exibição de dados do usuário
     usernameDisplay.textContent = usernameInput.value;
     accountIdDisplay.textContent = userData.id;
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
-    // Lógica para adicionar os botões de ação na nova div
-    if (gameActionButtons) {
-        // Limpa os botões existentes
-        gameActionButtons.innerHTML = '';
-
-        // Adiciona o botão de logout
-        const logoutButtonClone = logoutButton.cloneNode(true);
-        logoutButtonClone.id = "logout-in-game";
-        gameActionButtons.appendChild(logoutButtonClone);
-
-        // Adiciona o botão de admin se o usuário for um administrador
-        if (ADMIN_IDS.includes(userData.id)) {
-            const openAdminButtonClone = openAdminPanelButton.cloneNode(true);
-            openAdminButtonClone.id = "admin-in-game";
-            gameActionButtons.appendChild(openAdminButtonClone);
+    // Lógica para adicionar o botão de admin
+    if (ADMIN_IDS.includes(userData.id)) {
+        gameArea.appendChild(openAdminPanelButton);
+    } else {
+        if (openAdminPanelButton.parentNode) {
+            openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
         }
     }
 
@@ -575,19 +567,15 @@ registerButton.addEventListener("click", () => {
     }
 });
 
-// Ações do botão de logout no inventário
 logoutButton.addEventListener("click", () => {
     localStorage.setItem('onlineStatus-' + accountIdDisplay.textContent, 'false');
     saveGame();
     loginPanel.classList.remove("hidden");
     gameArea.classList.add("hidden");
     newAdminPanel.classList.add("hidden");
-    
-    // Remove os botões de ação da tela do jogo
-    if (gameActionButtons) {
-        gameActionButtons.innerHTML = '';
+    if (openAdminPanelButton.parentNode) {
+        openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
     }
-
     usernameInput.value = "";
     passwordInput.value = "";
     clearLogin();
@@ -690,10 +678,7 @@ function updateInventoryUI() {
 
     if (isViewingOtherPlayer) {
         expandButton.style.display = "none";
-        // Remove os botões de ação para visualização de outro jogador
-        if (gameActionButtons) {
-             gameActionButtons.innerHTML = '';
-        }
+        logoutButton.style.display = "none";
 
         let backButton = document.getElementById("back-button");
         if (!backButton) {
@@ -706,34 +691,21 @@ function updateInventoryUI() {
         }
         
         document.querySelector("#inventory-container .inventory-header h2").textContent = "Inventário (Visualização)";
-        document.querySelector("#inventory-container .score-display").textContent = "Moedas: " + Math.floor(score);
-        document.querySelector("#inventory-container .username-display").textContent = "Usuário: " + usernameDisplay.textContent;
-        document.querySelector("#inventory-container .account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
-        document.querySelector("#inventory-container p.score-display").style.display = 'block'; 
-        document.querySelector("#inventory-container p.username-display").style.display = 'block';
-        document.querySelector("#inventory-container p.account-id").style.display = 'block';
+        document.querySelector("#inventory-container p.score-display").textContent = "Moedas: " + Math.floor(score);
+        document.querySelector("#inventory-container p.username-display").textContent = "Usuário: " + usernameDisplay.textContent;
+        document.querySelector("#inventory-container p.account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
 
     } else {
         expandButton.style.display = "block";
-        // Recria os botões de ação quando não está no modo de visualização
-        if (gameActionButtons) {
-            gameActionButtons.innerHTML = '';
-            gameActionButtons.appendChild(logoutButton);
-            if (ADMIN_IDS.includes(accountIdDisplay.textContent)) {
-                gameActionButtons.appendChild(openAdminPanelButton);
-            }
-        }
-        
+        logoutButton.style.display = "block";
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
 
+        // Correção aqui: Acessa o valor do input diretamente
         document.querySelector("#inventory-container .inventory-header h2").textContent = "Inventário";
         document.querySelector("#inventory-container p.score-display").textContent = `Moedas: ${Math.floor(score)}`;
         document.querySelector("#inventory-container p.username-display").textContent = `Usuário: ${usernameInput.value}`;
         document.querySelector("#inventory-container p.account-id").textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
-        document.querySelector("#inventory-container p.score-display").style.display = 'block';
-        document.querySelector("#inventory-container p.username-display").style.display = 'block';
-        document.querySelector("#inventory-container p.account-id").style.display = 'block';
     }
     
     scoreDisplay.textContent = Math.floor(score);
