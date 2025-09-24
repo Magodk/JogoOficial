@@ -239,12 +239,9 @@ async function handleDeleteAccount() {
 }
 
 async function handleAddAdmin() {
-    // Usando runTransaction para garantir a atualização atômica
     try {
         const docRef = doc(db, "players", selectedPlayerId);
-        await runTransaction(db, async (transaction) => {
-            transaction.update(docRef, { isAdmin: true });
-        });
+        await updateDoc(docRef, { isAdmin: true });
         adminFeedbackMessage.textContent = `${selectedPlayerUsername} agora é um administrador.`;
     } catch (e) {
         console.error("Erro ao adicionar admin:", e);
@@ -253,16 +250,13 @@ async function handleAddAdmin() {
 }
 
 async function handleRemoveAdmin() {
-    if (selectedPlayerId === currentUserId) {
-        adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
-        return;
-    }
-    // Usando runTransaction para garantir a atualização atômica
     try {
+        if (selectedPlayerId === currentUserId) {
+            adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
+            return;
+        }
         const docRef = doc(db, "players", selectedPlayerId);
-        await runTransaction(db, async (transaction) => {
-            transaction.update(docRef, { isAdmin: false });
-        });
+        await updateDoc(docRef, { isAdmin: false });
         adminFeedbackMessage.textContent = `${selectedPlayerUsername} não é mais um administrador.`;
     } catch (e) {
         console.error("Erro ao remover admin:", e);
@@ -303,7 +297,7 @@ async function handleGiveCoins() {
         await runTransaction(db, async (transaction) => {
             const playerDoc = await transaction.get(playerDocRef);
             if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
+                throw "Jogador não encontrado!";
             }
             const newScore = (playerDoc.data().score || 0) + value;
             transaction.update(playerDocRef, { score: newScore });
@@ -313,7 +307,7 @@ async function handleGiveCoins() {
         adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
     } catch (e) {
         console.error("Erro ao dar moedas:", e);
-        adminFeedbackMessage.textContent = `Erro ao dar moedas: ${e.message || e}`;
+        adminFeedbackMessage.textContent = "Erro ao dar moedas.";
     }
 }
 
@@ -326,42 +320,26 @@ async function handleGiveTreasure() {
     const treasureName = giveTreasureSelect.value;
     const treasureToGive = treasures.find(t => t.name === treasureName);
 
-    if (!treasureToGive) {
-        adminFeedbackMessage.textContent = "Tesouro não encontrado.";
-        return;
-    }
+    if (!treasureToGive) return;
 
     try {
-        const playerDocRef = doc(db, "players", selectedPlayerId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
-            }
-            const currentData = playerDoc.data();
-            const currentInventory = currentData.inventory || {};
-            
-            const treasureKey = treasureToGive.name;
-            const newInventory = { ...currentInventory };
-            
-            if (!newInventory[treasureKey]) {
-                newInventory[treasureKey] = { ...treasureToGive, quantity: 0 };
-            }
-            newInventory[treasureKey].quantity++;
-            
-            const newTotalItems = (currentData.totalItems || 0) + 1;
-            
-            transaction.update(playerDocRef, {
-                inventory: newInventory,
-                totalItems: newTotalItems
-            });
-            updateAdminInventoryUI(newInventory);
+        const docRef = doc(db, "players", selectedPlayerId);
+        const docSnap = await getDoc(docRef);
+        const currentData = docSnap.exists() ? docSnap.data() : {};
+        const currentInventory = currentData.inventory || {};
+        if (!currentInventory[treasureName]) {
+            currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
+        }
+        currentInventory[treasureName].quantity++;
+        await updateDoc(docRef, {
+            inventory: currentInventory,
+            totalItems: (currentData.totalItems || 0) + 1
         });
-
+        updateAdminInventoryUI(currentInventory);
         adminFeedbackMessage.textContent = `${treasureToGive.name} adicionado ao inventário de ${selectedPlayerUsername}.`;
     } catch (e) {
         console.error("Erro ao dar tesouro:", e);
-        adminFeedbackMessage.textContent = `Erro ao dar tesouro: ${e.message || e}`;
+        adminFeedbackMessage.textContent = "Erro ao dar tesouro.";
     }
 }
 
@@ -377,20 +355,14 @@ async function handleIncreaseCapacity() {
         return;
     }
     try {
-        const playerDocRef = doc(db, "players", selectedPlayerId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
-            }
-            const currentCapacity = playerDoc.data().capacity || 20;
-            const newCapacity = currentCapacity + value;
-            transaction.update(playerDocRef, { capacity: newCapacity });
-        });
+        const docRef = doc(db, "players", selectedPlayerId);
+        const docSnap = await getDoc(docRef);
+        const currentCapacity = docSnap.exists() ? (docSnap.data().capacity || 20) : 20;
+        await updateDoc(docRef, { capacity: currentCapacity + value });
         adminFeedbackMessage.textContent = `Capacidade de ${selectedPlayerUsername} aumentada em ${value}.`;
     } catch (e) {
         console.error("Erro ao aumentar capacidade:", e);
-        adminFeedbackMessage.textContent = `Erro ao aumentar capacidade: ${e.message || e}`;
+        adminFeedbackMessage.textContent = "Erro ao aumentar capacidade.";
     }
 }
 
@@ -448,6 +420,9 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// Lista de UIDs de administradores
+const adminUIDs = ["bbGhoIOvqfSO6CNWThwjIL8dRWF2"];
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -455,8 +430,12 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             
+            // Verifica se o usuário é admin baseado na lista de UIDs
+            const isAdmin = adminUIDs.includes(user.uid);
+
             if (docSnap.exists()) {
                 const userData = docSnap.data();
+                userData.isAdmin = isAdmin; // Garante que a permissão seja atualizada no carregamento
                 await loadGame(userData);
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
@@ -467,7 +446,7 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    isAdmin: false,
+                    isAdmin: isAdmin,
                 };
                 await setDoc(docRef, initialData);
                 await loadGame(initialData);
@@ -499,6 +478,8 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        const isAdmin = adminUIDs.includes(user.uid);
+
         const initialData = {
             username: username,
             score: 100,
@@ -506,7 +487,7 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            isAdmin: false,
+            isAdmin: isAdmin,
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
@@ -561,6 +542,7 @@ function showMessage(text) {
 }
 
 function getRandomTreasure() {
+    // Corrigindo a lógica para a seleção ponderada de tesouros
     const totalChance = treasures.reduce((sum, t) => sum + t.chance, 0);
     let rand = Math.random() * totalChance;
 
@@ -570,6 +552,7 @@ function getRandomTreasure() {
         }
         rand -= t.chance;
     }
+    // Fallback para garantir que um tesouro seja sempre retornado
     return treasures[treasures.length - 1];
 }
 
@@ -614,47 +597,15 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
         alert("Moedas insuficientes!");
         return;
     }
-
-    try {
-        const playerDocRef = doc(db, "players", currentUserId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
-            }
-            const currentData = playerDoc.data();
-            const newScore = (currentData.score || 0) - treasureData.value;
-            const newTotalItems = (currentData.totalItems || 0) + 1;
-            
-            const currentInventory = currentData.inventory || {};
-            const treasureKey = treasureData.name;
-            const newInventory = { ...currentInventory };
-
-            if (!newInventory[treasureKey]) {
-                newInventory[treasureKey] = { ...treasureData, quantity: 0 };
-            }
-            newInventory[treasureKey].quantity++;
-            
-            transaction.update(playerDocRef, {
-                score: newScore,
-                inventory: newInventory,
-                totalItems: newTotalItems
-            });
-
-            // Atualiza o estado local após a transação bem-sucedida
-            score = newScore;
-            inventory = newInventory;
-            totalItems = newTotalItems;
-        });
-
-        // Atualiza a UI após a transação
-        updateInventoryUI();
-        updateCapacityBar();
-
-    } catch (e) {
-        console.error("Erro ao comprar tesouro:", e);
-        alert(`Erro ao comprar tesouro: ${e.message || e}`);
+    score -= treasureData.value;
+    if (!inventory[treasureData.name]) {
+        inventory[treasureData.name] = { ...treasureData, quantity: 0 };
     }
+    inventory[treasureData.name].quantity++;
+    totalItems++;
+    updateInventoryUI();
+    updateCapacityBar();
+    await saveGame();
 
     const treasureRect = treasureElement.getBoundingClientRect();
     const inventoryRect = inventoryButton.getBoundingClientRect();
@@ -763,52 +714,14 @@ function exitViewMode() {
 
 async function sellItem(item) {
     if (item.quantity <= 0) return;
-    
-    try {
-        const playerDocRef = doc(db, "players", currentUserId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
-            }
-            const currentData = playerDoc.data();
-            const currentInventory = currentData.inventory || {};
-            
-            const treasureKey = item.name;
-            const newInventory = { ...currentInventory };
-            
-            if (newInventory[treasureKey] && newInventory[treasureKey].quantity > 0) {
-                newInventory[treasureKey].quantity--;
-                const newTotalItems = (currentData.totalItems || 0) - 1;
-                const newScore = (currentData.score || 0) + item.value;
-                
-                if (newInventory[treasureKey].quantity === 0) {
-                    delete newInventory[treasureKey];
-                }
-                
-                transaction.update(playerDocRef, {
-                    score: newScore,
-                    inventory: newInventory,
-                    totalItems: newTotalItems
-                });
-
-                // Atualiza o estado local
-                score = newScore;
-                inventory = newInventory;
-                totalItems = newTotalItems;
-            } else {
-                throw new Error("Item para vender não encontrado.");
-            }
-        });
-        
-        updateInventoryUI();
-        updateCapacityBar();
-        infoModal.classList.remove("open");
-
-    } catch (e) {
-        console.error("Erro ao vender item:", e);
-        alert(`Erro ao vender item: ${e.message || e}`);
-    }
+    item.quantity--;
+    totalItems--;
+    score += item.value;
+    if (item.quantity === 0) delete inventory[item.name];
+    updateInventoryUI();
+    updateCapacityBar();
+    infoModal.classList.remove("open");
+    await saveGame();
 }
 
 function updateCapacityBar() {
@@ -827,43 +740,16 @@ async function generateAuria() {
 }
 
 expandButton.addEventListener("click", async () => {
-    if (score < expandCost) {
-        alert("Moedas insuficientes!");
-        return;
-    }
-    
-    try {
-        const playerDocRef = doc(db, "players", currentUserId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw new Error("Jogador não encontrado!");
-            }
-            const currentData = playerDoc.data();
-            const newScore = (currentData.score || 0) - (currentData.expandCost || 100);
-            const newCapacity = (currentData.capacity || 20) + 10;
-            const newExpandCost = (currentData.expandCost || 100) + 50;
-
-            transaction.update(playerDocRef, {
-                score: newScore,
-                capacity: newCapacity,
-                expandCost: newExpandCost
-            });
-            
-            // Atualiza o estado local
-            score = newScore;
-            capacity = newCapacity;
-            expandCost = newExpandCost;
-        });
-
-        // Atualiza a UI após a transação
+    if (score >= expandCost) {
+        score -= expandCost;
+        capacity += 10;
+        expandCost += 50;
         expandButton.textContent = `Aumentar Capacidade (${expandCost} moedas)`;
         updateInventoryUI();
         updateCapacityBar();
-
-    } catch (e) {
-        console.error("Erro ao aumentar capacidade:", e);
-        alert(`Erro ao aumentar capacidade: ${e.message || e}`);
+        await saveGame();
+    } else {
+        alert("Moedas insuficientes!");
     }
 });
 
