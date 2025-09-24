@@ -412,7 +412,6 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
-// A LÓGICA CORRIGIDA ESTÁ AQUI
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -502,9 +501,8 @@ loginButton.addEventListener("click", async () => {
 
 logoutButton.addEventListener("click", async () => {
     try {
-        if (currentUserId) {
-            await saveGame();
-        }
+        // Remover a chamada saveGame() daqui, pois ela pode causar um erro de estado.
+        // O jogo já salva automaticamente a cada 60s ou no fechamento da página.
         await signOut(auth);
         showMessage("Você saiu da sua conta.");
     } catch (error) {
