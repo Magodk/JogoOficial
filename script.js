@@ -87,6 +87,7 @@ let auriaTimer = 0;
 const TREASURE_SPAWN_INTERVAL = 3000;
 const AURIA_GEN_INTERVAL = 1000;
 const MAX_DELTA = 1000;
+const MAX_TREASURES_ON_BELT = 5; // Adicionado para controlar o número de tesouros na esteira
 
 const newAdminPanel = document.getElementById("new-admin-panel");
 const closeAdminPanelButton = document.getElementById("close-admin-panel");
@@ -156,7 +157,7 @@ async function populatePlayerList() {
     playerNameSpan.textContent = userData.username;
     playerItem.appendChild(playerNameSpan);
 
-    playerItem.dataset.id = userData.shortId; // Usando o ID curto para o display
+    playerItem.dataset.id = userData.shortId;
     playerItem.dataset.username = userData.username;
     playerItem.addEventListener("click", () => {
       selectPlayer(docSnap.id, userData.username);
@@ -179,7 +180,7 @@ async function selectPlayer(accountId, username) {
 
   const targetUser = docSnap.data();
   playerDetailsName.textContent = selectedPlayerUsername;
-  playerDetailsId.textContent = targetUser.shortId; // Exibe o ID curto
+  playerDetailsId.textContent = targetUser.shortId;
   playerDetailsScore.textContent = Math.floor(targetUser.score);
 
   playerDetailsPanel.classList.remove("hidden");
@@ -369,7 +370,6 @@ async function saveGame() {
       totalItems: totalItems,
       expandCost: expandCost,
       username: usernameInput.value,
-      isAdmin: ADMIN_IDS.includes(currentUserId)
     };
     await setDoc(doc(db, "players", currentUserId), userData, { merge: true });
     console.log("Jogo salvo com sucesso no Firebase!");
@@ -421,25 +421,21 @@ onAuthStateChanged(auth, async (user) => {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        
-        // CORREÇÃO: Verifica se o ID de 6 dígitos existe e se o usuário é admin
-        const isAdmin = ADMIN_IDS.includes(userData.shortId);
-        
-        // Se o usuário não tiver um shortId, cria e salva
-        if (!userData.shortId) {
-            const newShortId = Math.floor(100000 + Math.random() * 900000).toString();
-            await updateDoc(docRef, { shortId: newShortId });
-            userData.shortId = newShortId;
+        let shortId = userData.shortId;
+
+        if (!shortId) {
+          shortId = Math.floor(100000 + Math.random() * 900000).toString();
+          await updateDoc(docRef, { shortId: shortId });
         }
 
-        // Carrega o jogo com os dados atualizados, incluindo o status de admin
+        const isAdmin = ADMIN_IDS.includes(shortId);
         userData.isAdmin = isAdmin;
+        userData.shortId = shortId;
         await loadGame(userData);
       } else {
         console.log("Criando novo perfil para o usuário logado.");
-        const shortId = Math.floor(100000 + Math.random() * 900000).toString(); // Gera um ID de 6 dígitos
+        const shortId = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // CORREÇÃO: A lógica do admin deve usar o shortId
         const initialData = {
           username: usernameInput.value,
           shortId: shortId,
