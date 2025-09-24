@@ -87,7 +87,7 @@ let auriaTimer = 0;
 const TREASURE_SPAWN_INTERVAL = 3000;
 const AURIA_GEN_INTERVAL = 1000;
 const MAX_DELTA = 1000;
-const MAX_TREASURES_ON_BELT = 5; // Adicionado para controlar o número de tesouros na esteira
+const MAX_TREASURES_ON_BELT = 5;
 
 const newAdminPanel = document.getElementById("new-admin-panel");
 const closeAdminPanelButton = document.getElementById("close-admin-panel");
@@ -157,7 +157,7 @@ async function populatePlayerList() {
     playerNameSpan.textContent = userData.username;
     playerItem.appendChild(playerNameSpan);
 
-    playerItem.dataset.id = userData.shortId;
+    playerItem.dataset.id = userData.shortId; // Usando o ID curto para o display
     playerItem.dataset.username = userData.username;
     playerItem.addEventListener("click", () => {
       selectPlayer(docSnap.id, userData.username);
@@ -180,7 +180,7 @@ async function selectPlayer(accountId, username) {
 
   const targetUser = docSnap.data();
   playerDetailsName.textContent = selectedPlayerUsername;
-  playerDetailsId.textContent = targetUser.shortId;
+  playerDetailsId.textContent = targetUser.shortId; // Exibe o ID curto
   playerDetailsScore.textContent = Math.floor(targetUser.score);
 
   playerDetailsPanel.classList.remove("hidden");
@@ -751,7 +751,10 @@ function gameLoop(currentTime) {
 
   treasureSpawnTimer += deltaTime;
   if (treasureSpawnTimer >= TREASURE_SPAWN_INTERVAL) {
-    createTreasure();
+    // Adicionado o limite de tesouros para evitar bugs visuais
+    if (conveyorBelt.children.length < MAX_TREASURES_ON_BELT) {
+      createTreasure();
+    }
     treasureSpawnTimer = 0;
   }
   auriaTimer += deltaTime;
