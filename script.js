@@ -333,11 +333,9 @@ onAuthStateChanged(auth, async (user) => {
                 const shortId = userData.shortId;
                 const isAdmin = ADMIN_IDS.includes(shortId);
 
-                // Carrega o jogo com os dados do usuário do Firestore
                 userData.isAdmin = isAdmin;
                 await loadGame(userData);
             } else {
-                // Se a conta existe no Auth, mas não no Firestore, criamos o perfil
                 console.log("Criando perfil para usuário existente no Auth, mas sem perfil no Firestore.");
                 const shortId = Math.floor(100000 + Math.random() * 900000).toString();
                 
@@ -365,7 +363,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// AQUI ESTÁ A LÓGICA CORRIGIDA PARA REGISTRO
 registerButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -377,14 +374,11 @@ registerButton.addEventListener("click", async () => {
     }
 
     try {
-        // Passo 1: Cria a conta do Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, emailFicticio, password);
         const userId = userCredential.user.uid;
         
-        // Passo 2: Cria o ID de 6 dígitos no mesmo momento
         const shortId = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Passo 3: Cria o perfil do usuário no Firestore (garantindo que o shortId seja salvo)
         const initialData = {
             username: username,
             shortId: shortId,
@@ -404,7 +398,6 @@ registerButton.addEventListener("click", async () => {
     }
 });
 
-// AQUI ESTÁ A LÓGICA CORRIGIDA PARA LOGIN
 loginButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -676,7 +669,6 @@ function gameLoop(currentTime) {
 
   treasureSpawnTimer += deltaTime;
   if (treasureSpawnTimer >= TREASURE_SPAWN_INTERVAL) {
-    // Adicionado o limite de tesouros para evitar bugs visuais
     if (conveyorBelt.children.length < MAX_TREASURES_ON_BELT) {
       createTreasure();
     }
