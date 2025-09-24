@@ -70,7 +70,7 @@ let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
 // IDs de administradores para controle de acesso ao painel
-const ADMIN_IDS = ["514710"];
+const ADMIN_IDS = ["311331"];
 
 const treasures = [
   { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
@@ -543,7 +543,7 @@ function createTreasure() {
   
   // CORREÇÃO: Centraliza a posição horizontal do tesouro
   const beltRect = conveyorBelt.getBoundingClientRect();
-  const centralPosition = (beltRect.width / 2) - 25; 
+  const centralPosition = (beltRect.width / 0) - 25; 
   treasure.style.left = centralPosition + "px";
 
   treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
