@@ -176,7 +176,7 @@ async function selectPlayer(accountId, username) {
 
     const targetUser = docSnap.data();
     playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = targetUser.accountId; // CORREÇÃO: Usando o ID fixo do banco de dados
+    playerDetailsId.textContent = targetUser.accountId;
     playerDetailsScore.textContent = Math.floor(targetUser.score);
 
     playerDetailsPanel.classList.remove("hidden");
@@ -369,7 +369,6 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
-            // CORREÇÃO: Salvando o accountId fixo
             accountId: accountIdDisplay.textContent
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
@@ -387,7 +386,7 @@ async function loadGame(userData) {
     expandCost = userData.expandCost || 100;
 
     usernameDisplay.textContent = userData.username;
-    accountIdDisplay.textContent = userData.accountId; // CORREÇÃO: Usando o ID fixo do banco de dados
+    accountIdDisplay.textContent = userData.accountId;
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
@@ -413,6 +412,7 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// A LÓGICA CORRIGIDA ESTÁ AQUI
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -420,11 +420,13 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
+                // Se o documento existe, carrega os dados e o ID fixo
                 await loadGame(docSnap.data());
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
                 
-                // CORREÇÃO: Gera o ID de 6 dígitos apenas no primeiro login/criação
+                // Se o documento não existe, é um novo usuário.
+                // Gera o ID de 6 dígitos apenas no primeiro login/criação
                 const newAccountId = Math.floor(Math.random() * 900000) + 100000;
 
                 const initialData = {
@@ -435,7 +437,7 @@ onAuthStateChanged(auth, async (user) => {
                     totalItems: 0,
                     expandCost: 100,
                     isAdmin: (user.email === "dono2@test.com"),
-                    accountId: newAccountId, // CORREÇÃO: Salva o ID fixo
+                    accountId: newAccountId, // Salva o ID fixo
                 };
                 
                 await setDoc(docRef, initialData);
