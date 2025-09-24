@@ -387,6 +387,14 @@ async function loadGame(userData) {
     usernameDisplay.textContent = userData.username;
     accountIdDisplay.textContent = currentUserId;
 
+    // Lógica para carregar o nome de usuário corretamente
+    const userDocRef = doc(db, "players", currentUserId);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
+        const savedUsername = userDocSnap.data().username;
+        usernameDisplay.textContent = savedUsername;
+    }
+
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
@@ -412,6 +420,12 @@ window.addEventListener('beforeunload', async (event) => {
 });
 
 // Ajuste na lógica de inicialização para evitar a tela de login ao recarregar
+document.addEventListener("DOMContentLoaded", () => {
+    // Inicialmente esconde a área do jogo e a tela de login para evitar o "pisca-pisca"
+    loginPanel.classList.add("hidden");
+    gameArea.classList.add("hidden");
+});
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -437,7 +451,7 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
-            // Em caso de erro, mostre a tela de login para que o usuário tente novamente
+            // Em caso de erro, mostre a tela de login
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
         }
