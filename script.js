@@ -268,98 +268,6 @@ async function handleRemoveAdmin() {
   }
 }
 
-function updateAdminInventoryUI(inventoryData) {
-  const adminInventoryItemsEl = document.getElementById("admin-inventory-items");
-  if (!adminInventoryItemsEl) return;
-  adminInventoryItemsEl.innerHTML = "";
-  if (!inventoryData || Object.values(inventoryData).length === 0) {
-    adminInventoryItemsEl.textContent = "Inventário Vazio";
-  } else {
-    Object.values(inventoryData).forEach(item => {
-      const div = document.createElement("div");
-      div.classList.add("inventory-item", item.rarity);
-      div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
-      adminInventoryItemsEl.appendChild(div);
-    });
-  }
-}
-
-async function handleGiveCoins() {
-  if (!selectedPlayerId) {
-    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-    return;
-  }
-  const giveCoinsInput = document.getElementById("give-coins-input");
-  const value = parseInt(giveCoinsInput.value);
-  if (isNaN(value) || value <= 0) {
-    adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
-    return;
-  }
-  try {
-    const docRef = doc(db, "players", selectedPlayerId);
-    const docSnap = await getDoc(docRef);
-    const currentScore = (docSnap.exists() && docSnap.data().score) ? docSnap.data().score : 0;
-    await updateDoc(docRef, { score: currentScore + value });
-    playerDetailsScore.textContent = Math.floor(currentScore + value);
-    adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
-  } catch (e) {
-    console.error("Erro ao dar moedas:", e);
-    adminFeedbackMessage.textContent = "Erro ao dar moedas.";
-  }
-}
-
-async function handleGiveTreasure() {
-  if (!selectedPlayerId) {
-    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-    return;
-  }
-  const giveTreasureSelect = document.getElementById("give-treasure-select");
-  const treasureName = giveTreasureSelect.value;
-  const treasureToGive = treasures.find(t => t.name === treasureName);
-  try {
-    const docRef = doc(db, "players", selectedPlayerId);
-    const docSnap = await getDoc(docRef);
-    const currentData = docSnap.exists() ? docSnap.data() : {};
-    const currentInventory = currentData.inventory || {};
-    if (!currentInventory[treasureName]) {
-      currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
-    }
-    currentInventory[treasureName].quantity++;
-    await updateDoc(docRef, {
-      inventory: currentInventory,
-      totalItems: (currentData.totalItems || 0) + 1
-    });
-    updateAdminInventoryUI(currentInventory);
-    adminFeedbackMessage.textContent = `${treasureToGive.name} adicionado ao inventário de ${selectedPlayerUsername}.`;
-  } catch (e) {
-    console.error("Erro ao dar tesouro:", e);
-    adminFeedbackMessage.textContent = "Erro ao dar tesouro.";
-  }
-}
-
-async function handleIncreaseCapacity() {
-  if (!selectedPlayerId) {
-    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-    return;
-  }
-  const increaseCapacityInput = document.getElementById("increase-capacity-input");
-  const value = parseInt(increaseCapacityInput.value);
-  if (isNaN(value) || value <= 0) {
-    adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
-    return;
-  }
-  try {
-    const docRef = doc(db, "players", selectedPlayerId);
-    const docSnap = await getDoc(docRef);
-    const currentCapacity = docSnap.exists() ? (docSnap.data().capacity || 20) : 20;
-    await updateDoc(docRef, { capacity: currentCapacity + value });
-    adminFeedbackMessage.textContent = `Capacidade de ${selectedPlayerUsername} aumentada em ${value}.`;
-  } catch (e) {
-    console.error("Erro ao aumentar capacidade:", e);
-    adminFeedbackMessage.textContent = "Erro ao aumentar capacidade.";
-  }
-}
-
 async function saveGame() {
   if (!currentUserId) return;
   try {
@@ -412,6 +320,64 @@ window.addEventListener('beforeunload', async (event) => {
   }
 });
 
+// FUNÇÃO DE LOGIN E CRIAÇÃO DE CONTA (AGORA CORRIGIDA)
+registerButton.addEventListener("click", async () => {
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    const emailFicticio = `${username}@meujogo.com`;
+
+    if (!username || !password || password.length < 6) {
+        showMessage("Nome de usuário e senha (mínimo 6 caracteres) são obrigatórios.");
+        return;
+    }
+
+    try {
+        // Cria a conta do Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, emailFicticio, password);
+        const userId = userCredential.user.uid;
+
+        // Cria o ID de 6 dígitos
+        const shortId = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Cria e salva o perfil do usuário no Firestore com o ID de 6 dígitos
+        const initialData = {
+            username: username,
+            shortId: shortId,
+            score: 100,
+            inventory: {},
+            capacity: 20,
+            totalItems: 0,
+            expandCost: 100,
+            isAdmin: ADMIN_IDS.includes(shortId)
+        };
+        await setDoc(doc(db, "players", userId), initialData);
+
+        showMessage("Conta criada com sucesso!");
+    } catch (error) {
+        showMessage("Erro ao criar conta: " + error.message);
+        console.error(error);
+    }
+});
+
+loginButton.addEventListener("click", async () => {
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    const emailFicticio = `${username}@meujogo.com`;
+
+    if (!username || !password) {
+        showMessage("Nome de usuário e senha são obrigatórios.");
+        return;
+    }
+
+    try {
+        await signInWithEmailAndPassword(auth, emailFicticio, password);
+        showMessage("Login realizado com sucesso!");
+    } catch (error) {
+        showMessage("Erro ao fazer login: " + error.message);
+        console.error(error);
+    }
+});
+
 // AQUI ESTÃO OS AJUSTES PARA O LOGIN POR NOME DE USUÁRIO E O ID DE 6 DÍGITOS
 onAuthStateChanged(auth, async (user) => {
   if (user) {
@@ -423,9 +389,10 @@ onAuthStateChanged(auth, async (user) => {
         const userData = docSnap.data();
         let shortId = userData.shortId;
 
+        // Para contas antigas que não têm shortId, cria e salva um novo
         if (!shortId) {
-          shortId = Math.floor(100000 + Math.random() * 900000).toString();
-          await updateDoc(docRef, { shortId: shortId });
+            shortId = Math.floor(100000 + Math.random() * 900000).toString();
+            await updateDoc(docRef, { shortId: shortId });
         }
 
         const isAdmin = ADMIN_IDS.includes(shortId);
@@ -433,11 +400,12 @@ onAuthStateChanged(auth, async (user) => {
         userData.shortId = shortId;
         await loadGame(userData);
       } else {
+        // Se a conta existe no Auth, mas não no Firestore, criamos o perfil
         console.log("Criando novo perfil para o usuário logado.");
         const shortId = Math.floor(100000 + Math.random() * 900000).toString();
         
         const initialData = {
-          username: usernameInput.value,
+          username: user.email.split('@')[0], // Pega o nome de usuário do email fictício
           shortId: shortId,
           score: 100,
           inventory: {},
@@ -446,7 +414,7 @@ onAuthStateChanged(auth, async (user) => {
           expandCost: 100,
           isAdmin: ADMIN_IDS.includes(shortId)
         };
-        await setDoc(docRef, initialData);
+        await setDoc(doc(db, "players", user.uid), initialData);
         await loadGame(initialData);
       }
     } catch (e) {
@@ -457,44 +425,6 @@ onAuthStateChanged(auth, async (user) => {
     currentUserId = null;
     loginPanel.classList.remove("hidden");
     gameArea.classList.add("hidden");
-  }
-});
-
-registerButton.addEventListener("click", async () => {
-  const username = usernameInput.value;
-  const password = passwordInput.value;
-  const emailFicticio = `${username}@meujogo.com`;
-
-  if (!username || !password || password.length < 6) {
-    showMessage("Nome de usuário e senha (mínimo 6 caracteres) são obrigatórios.");
-    return;
-  }
-
-  try {
-    await createUserWithEmailAndPassword(auth, emailFicticio, password);
-    showMessage("Conta criada com sucesso!");
-  } catch (error) {
-    showMessage("Erro ao criar conta: " + error.message);
-    console.error(error);
-  }
-});
-
-loginButton.addEventListener("click", async () => {
-  const username = usernameInput.value;
-  const password = passwordInput.value;
-  const emailFicticio = `${username}@meujogo.com`;
-
-  if (!username || !password) {
-    showMessage("Nome de usuário e senha são obrigatórios.");
-    return;
-  }
-
-  try {
-    await signInWithEmailAndPassword(auth, emailFicticio, password);
-    showMessage("Login realizado com sucesso!");
-  } catch (error) {
-    showMessage("Erro ao fazer login: " + error.message);
-    console.error(error);
   }
 });
 
@@ -537,7 +467,6 @@ function createTreasure() {
   treasure.style.position = "absolute";
   treasure.style.top = "-60px";
   
-  // CORREÇÃO: Centraliza a posição horizontal do tesouro
   const beltRect = conveyorBelt.getBoundingClientRect();
   const centralPosition = (beltRect.width / 2) - 25; 
   treasure.style.left = centralPosition + "px";
