@@ -369,7 +369,7 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
-            username: usernameDisplay.textContent // Salvando o nome de usuário atual
+            username: usernameDisplay.textContent
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -385,7 +385,7 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username; // CARREGANDO DO BANCO DE DADOS
+    usernameDisplay.textContent = userData.username;
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
@@ -472,6 +472,7 @@ registerButton.addEventListener("click", async () => {
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
+        usernameDisplay.textContent = username; // ATUALIZA IMEDIATAMENTE
 
         showMessage("Conta criada com sucesso! Você será logado automaticamente.");
     } catch (error) {
@@ -496,6 +497,7 @@ loginButton.addEventListener("click", async () => {
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
+        usernameDisplay.textContent = username; // ATUALIZA IMEDIATAMENTE
         showMessage("Login realizado com sucesso!");
     } catch (error) {
         if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
