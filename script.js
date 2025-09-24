@@ -3,7 +3,7 @@
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -291,12 +291,19 @@ async function handleGiveCoins() {
         adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
         return;
     }
+
     try {
-        const docRef = doc(db, "players", selectedPlayerId);
-        const docSnap = await getDoc(docRef);
-        const currentScore = (docSnap.exists() && docSnap.data().score) ? docSnap.data().score : 0;
-        await updateDoc(docRef, { score: currentScore + value });
-        playerDetailsScore.textContent = Math.floor(currentScore + value);
+        const playerDocRef = doc(db, "players", selectedPlayerId);
+        await runTransaction(db, async (transaction) => {
+            const playerDoc = await transaction.get(playerDocRef);
+            if (!playerDoc.exists()) {
+                throw "Jogador não encontrado!";
+            }
+            const newScore = (playerDoc.data().score || 0) + value;
+            transaction.update(playerDocRef, { score: newScore });
+            playerDetailsScore.textContent = Math.floor(newScore);
+        });
+
         adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
     } catch (e) {
         console.error("Erro ao dar moedas:", e);
@@ -561,7 +568,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 0) - 25;
+    const centralPosition = (beltRect.width / 2) - 25;
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
