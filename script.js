@@ -176,7 +176,7 @@ async function selectPlayer(accountId, username) {
 
     const targetUser = docSnap.data();
     playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = accountId;
+    playerDetailsId.textContent = accountId; // Exibe o ID do Firebase
     playerDetailsScore.textContent = Math.floor(targetUser.score);
 
     playerDetailsPanel.classList.remove("hidden");
@@ -385,7 +385,6 @@ async function loadGame(userData) {
     expandCost = userData.expandCost || 100;
 
     usernameDisplay.textContent = userData.username;
-    // Removendo a exibição do ID de 6 dígitos
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
@@ -603,7 +602,7 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     });
 
     setTimeout(() => {
-        if (treasureElement.parentNode) treasure.remove();
+        if (treasureElement.parentNode) treasureElement.remove();
     }, 1000);
 }
 
