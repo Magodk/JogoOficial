@@ -422,10 +422,12 @@ onAuthStateChanged(auth, async (user) => {
                 // Se o documento existe, carrega os dados e o ID fixo
                 await loadGame(docSnap.data());
             } else {
+                // Se o documento não existe, é um novo usuário.
+                // Isso só deve acontecer no primeiro login após um registro manual
+                // ou em um cenário de falha.
                 console.log("Criando novo perfil para o usuário logado.");
                 
-                // Se o documento não existe, é um novo usuário.
-                // Gera o ID de 6 dígitos apenas no primeiro login/criação
+                // Geramos o ID aqui para evitar bugs, mas o registro já deveria ter feito isso
                 const newAccountId = Math.floor(Math.random() * 900000) + 100000;
 
                 const initialData = {
@@ -464,7 +466,23 @@ registerButton.addEventListener("click", async () => {
     }
 
     try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const newAccountId = Math.floor(Math.random() * 900000) + 100000;
+        
+        const initialData = {
+            username: username,
+            score: 100,
+            inventory: {},
+            capacity: 20,
+            totalItems: 0,
+            expandCost: 100,
+            isAdmin: (user.email === "dono2@test.com"),
+            accountId: newAccountId,
+        };
+
+        await setDoc(doc(db, "players", user.uid), initialData);
+
         showMessage("Conta criada com sucesso! Você será logado automaticamente.");
     } catch (error) {
         if (error.code === 'auth/email-already-in-use') {
@@ -501,8 +519,8 @@ loginButton.addEventListener("click", async () => {
 
 logoutButton.addEventListener("click", async () => {
     try {
-        // Remover a chamada saveGame() daqui, pois ela pode causar um erro de estado.
-        // O jogo já salva automaticamente a cada 60s ou no fechamento da página.
+        // A remoção desta linha foi feita no código anterior. 
+        // Não é necessário salvar o jogo antes de deslogar.
         await signOut(auth);
         showMessage("Você saiu da sua conta.");
     } catch (error) {
