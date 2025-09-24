@@ -369,7 +369,6 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
-            isOnline: true
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -386,7 +385,7 @@ async function loadGame(userData) {
     expandCost = userData.expandCost || 100;
 
     usernameDisplay.textContent = userData.username;
-    accountIdDisplay.textContent = currentUserId; // Exibe o UID do Firebase
+    accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
@@ -424,14 +423,13 @@ onAuthStateChanged(auth, async (user) => {
                 console.log("Criando novo perfil para o usuário logado.");
                 
                 const initialData = {
-                    username: usernameInput.value || user.email.split('@')[0], 
+                    username: user.email.split('@')[0], 
                     score: 100,
                     inventory: {},
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
                     isAdmin: (user.email === "dono2@test.com"),
-                    isOnline: true
                 };
                 
                 await setDoc(docRef, initialData);
