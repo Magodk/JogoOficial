@@ -1,9 +1,9 @@
 // ==========================================================
-// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE (CORREÇÃO AQUI)
+// 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -69,16 +69,16 @@ let expandCost = 100;
 let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
-// 🚩 SUBSTITUA ISSO: Coloque os IDs dos seus administradores aqui, entre as aspas.
+// IDs de administradores para controle de acesso ao painel
 const ADMIN_IDS = ["id_do_seu_primeiro_admin", "id_do_seu_segundo_admin"];
 
 const treasures = [
-    { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
-    { name: "Moeda de Cobre", value: 5, auria: 0.2, img: "https://i.imgur.com/Rf3OAK6.png", rarity: "common", chance: 44 },
-    { name: "Pérola Simples", value: 12, auria: 0.3, img: "https://i.imgur.com/FWmR3eM.png", rarity: "common", chance: 40 },
-    { name: "Moeda de Ouro", value: 12, auria: 0.4, img: "https://i.imgur.com/1kweEds.png", rarity: "rare", chance: 30 },
-    { name: "Pérola Rara", value: 20, auria: 0.7, img: "https://i.imgur.com/2ddcqrF.png", rarity: "epic", chance: 15 },
-    { name: "Rubi Lendário", value: 35, auria: 1.5, img: "https://i.imgur.com/pYpdqiy.png", rarity: "legendary", chance: 5 }
+  { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
+  { name: "Moeda de Cobre", value: 5, auria: 0.2, img: "https://i.imgur.com/Rf3OAK6.png", rarity: "common", chance: 44 },
+  { name: "Pérola Simples", value: 12, auria: 0.3, img: "https://i.imgur.com/FWmR3eM.png", rarity: "common", chance: 40 },
+  { name: "Moeda de Ouro", value: 12, auria: 0.4, img: "https://i.imgur.com/1kweEds.png", rarity: "rare", chance: 30 },
+  { name: "Pérola Rara", value: 20, auria: 0.7, img: "https://i.imgur.com/2ddcqrF.png", rarity: "epic", chance: 15 },
+  { name: "Rubi Lendário", value: 35, auria: 1.5, img: "https://i.imgur.com/pYpdqiy.png", rarity: "legendary", chance: 5 }
 ];
 
 let lastFrameTime = 0;
@@ -86,7 +86,7 @@ let treasureSpawnTimer = 0;
 let auriaTimer = 0;
 const TREASURE_SPAWN_INTERVAL = 3000;
 const AURIA_GEN_INTERVAL = 1000;
-const MAX_DELTA = 1000; // ms - limita deltaTime para evitar spikes ao voltar da aba
+const MAX_DELTA = 1000;
 
 const newAdminPanel = document.getElementById("new-admin-panel");
 const closeAdminPanelButton = document.getElementById("close-admin-panel");
@@ -117,646 +117,656 @@ openAdminPanelButton.textContent = "Admin";
 openAdminPanelButton.classList.add("admin-button");
 
 openAdminPanelButton.addEventListener("click", () => {
-    newAdminPanel.classList.remove("hidden");
-    populatePlayerList();
+  newAdminPanel.classList.remove("hidden");
+  populatePlayerList();
 });
 
 closeAdminPanelButton.addEventListener("click", () => {
-    newAdminPanel.classList.add("hidden");
-    playerDetailsPanel.classList.add("hidden");
-    adminFeedbackMessage.textContent = "";
+  newAdminPanel.classList.add("hidden");
+  playerDetailsPanel.classList.add("hidden");
+  adminFeedbackMessage.textContent = "";
 });
 
 refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
 function populateTreasureSelect() {
-    const giveTreasureSelect = document.getElementById("give-treasure-select");
-    if (giveTreasureSelect) {
-        giveTreasureSelect.innerHTML = "";
-        treasures.forEach(t => {
-            const option = document.createElement("option");
-            option.value = t.name;
-            option.textContent = t.name;
-            giveTreasureSelect.appendChild(option);
-        });
-    }
+  const giveTreasureSelect = document.getElementById("give-treasure-select");
+  if (giveTreasureSelect) {
+    giveTreasureSelect.innerHTML = "";
+    treasures.forEach(t => {
+      const option = document.createElement("option");
+      option.value = t.name;
+      option.textContent = t.name;
+      giveTreasureSelect.appendChild(option);
+    });
+  }
 }
 
 async function populatePlayerList() {
-    playerListContainer.innerHTML = "";
-    const playersCol = collection(db, "players");
-    const playerSnapshot = await getDocs(playersCol);
+  playerListContainer.innerHTML = "";
+  const playersCol = collection(db, "players");
+  const playerSnapshot = await getDocs(playersCol);
 
-    playerSnapshot.forEach(docSnap => {
-        const userData = docSnap.data();
-        const playerItem = document.createElement("div");
-        playerItem.classList.add("player-list-item");
+  playerSnapshot.forEach(docSnap => {
+    const userData = docSnap.data();
+    const playerItem = document.createElement("div");
+    playerItem.classList.add("player-list-item");
 
-        const playerNameSpan = document.createElement("span");
-        playerNameSpan.textContent = userData.username;
-        playerItem.appendChild(playerNameSpan);
+    const playerNameSpan = document.createElement("span");
+    playerNameSpan.textContent = userData.username;
+    playerItem.appendChild(playerNameSpan);
 
-        playerItem.dataset.id = docSnap.id;
-        playerItem.dataset.username = userData.username;
-        playerItem.addEventListener("click", () => {
-            selectPlayer(docSnap.id, userData.username);
-        });
-        playerListContainer.appendChild(playerItem);
+    playerItem.dataset.id = docSnap.id;
+    playerItem.dataset.username = userData.username;
+    playerItem.addEventListener("click", () => {
+      selectPlayer(docSnap.id, userData.username);
     });
+    playerListContainer.appendChild(playerItem);
+  });
 }
 
 async function selectPlayer(accountId, username) {
-    selectedPlayerId = accountId;
-    selectedPlayerUsername = username;
+  selectedPlayerId = accountId;
+  selectedPlayerUsername = username;
 
-    const docRef = doc(db, "players", accountId);
-    const docSnap = await getDoc(docRef);
+  const docRef = doc(db, "players", accountId);
+  const docSnap = await getDoc(docRef);
 
-    if (!docSnap.exists()) {
-        adminFeedbackMessage.textContent = "Erro: Jogador não encontrado.";
-        return;
+  if (!docSnap.exists()) {
+    adminFeedbackMessage.textContent = "Erro: Jogador não encontrado.";
+    return;
+  }
+
+  const targetUser = docSnap.data();
+  playerDetailsName.textContent = selectedPlayerUsername;
+  playerDetailsId.textContent = accountId;
+  playerDetailsScore.textContent = Math.floor(targetUser.score);
+
+  playerDetailsPanel.classList.remove("hidden");
+  adminFeedbackMessage.textContent = "";
+
+  document.querySelectorAll(".player-list-item").forEach(item => {
+    item.classList.remove("selected");
+    if (item.dataset.id === accountId) {
+      item.classList.add("selected");
     }
+  });
 
-    const targetUser = docSnap.data();
-    playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = accountId;
-    playerDetailsScore.textContent = Math.floor(targetUser.score);
+  const adminCommandSection = document.querySelector("#player-details-panel .admin-command-section");
+  adminCommandSection.innerHTML = `
+      <h3 class="admin-panel-subtitle">Dar Moedas:</h3>
+      <div class="admin-action-wrapper">
+          <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
+          <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
+      </div>
+      <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
+      <div class="admin-action-wrapper">
+          <button id="delete-account-button" class="admin-action-button delete-account-button">Excluir Conta Permanentemente</button>
+          <button id="add-admin-button" class="admin-action-button add-admin-button">Adicionar Admin</button>
+          <button id="remove-admin-button" class="admin-action-button remove-admin-button">Remover Admin</button>
+      </div>
+      <h3 class="admin-panel-subtitle">Outras Ações:</h3>
+      <div class="admin-action-wrapper">
+          <label for="increase-capacity-input">Aumentar Capacidade:</label>
+          <input type="number" id="increase-capacity-input" placeholder="Aumentar em (ex: 10)">
+          <button id="increase-capacity-button" class="admin-action-button">Aumentar</button>
+      </div>
+  `;
 
-    playerDetailsPanel.classList.remove("hidden");
-    adminFeedbackMessage.textContent = "";
+  populateTreasureSelect();
+  document.getElementById("give-coins-button").addEventListener("click", handleGiveCoins);
+  document.getElementById("delete-account-button").onclick = handleDeleteAccount;
+  document.getElementById("add-admin-button").onclick = handleAddAdmin;
+  document.getElementById("remove-admin-button").onclick = handleRemoveAdmin;
+  document.getElementById("increase-capacity-button").onclick = handleIncreaseCapacity;
 
-    document.querySelectorAll(".player-list-item").forEach(item => {
-        item.classList.remove("selected");
-        if (item.dataset.id === accountId) {
-            item.classList.add("selected");
-        }
-    });
-
-    const adminCommandSection = document.querySelector("#player-details-panel .admin-command-section");
-    adminCommandSection.innerHTML = `
-        <h3 class="admin-panel-subtitle">Dar Moedas:</h3>
-        <div class="admin-action-wrapper">
-            <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
-            <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
-        </div>
-        <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
-        <div class="admin-action-wrapper">
-            <button id="delete-account-button" class="admin-action-button delete-account-button">Excluir Conta Permanentemente</button>
-            <button id="add-admin-button" class="admin-action-button add-admin-button">Adicionar Admin</button>
-            <button id="remove-admin-button" class="admin-action-button remove-admin-button">Remover Admin</button>
-        </div>
-        <h3 class="admin-panel-subtitle">Outras Ações:</h3>
-        <div class="admin-action-wrapper">
-            <label for="increase-capacity-input">Aumentar Capacidade:</label>
-            <input type="number" id="increase-capacity-input" placeholder="Aumentar em (ex: 10)">
-            <button id="increase-capacity-button" class="admin-action-button">Aumentar</button>
-        </div>
-    `;
-
-    populateTreasureSelect();
-    document.getElementById("give-coins-button").addEventListener("click", handleGiveCoins);
-    document.getElementById("delete-account-button").onclick = handleDeleteAccount;
-    document.getElementById("add-admin-button").onclick = handleAddAdmin;
-    document.getElementById("remove-admin-button").onclick = handleRemoveAdmin;
-    document.getElementById("increase-capacity-button").onclick = handleIncreaseCapacity;
-
-    updateAdminInventoryUI(targetUser.inventory || {});
+  updateAdminInventoryUI(targetUser.inventory || {});
 }
 
 async function handleDeleteAccount() {
-    if (selectedPlayerId === currentUserId) {
-        adminFeedbackMessage.textContent = "Não é possível excluir a sua própria conta.";
-        return;
+  if (selectedPlayerId === currentUserId) {
+    adminFeedbackMessage.textContent = "Não é possível excluir a sua própria conta.";
+    return;
+  }
+  if (confirm(`Tem certeza que deseja excluir a conta de ${selectedPlayerUsername}? Esta ação é irreversível.`)) {
+    try {
+      await deleteDoc(doc(db, "players", selectedPlayerId));
+      adminFeedbackMessage.textContent = `A conta de ${selectedPlayerUsername} foi excluída permanentemente.`;
+      playerDetailsPanel.classList.add("hidden");
+      populatePlayerList();
+    } catch (e) {
+      console.error("Erro ao excluir conta:", e);
+      adminFeedbackMessage.textContent = "Erro ao excluir conta.";
     }
-    if (confirm(`Tem certeza que deseja excluir a conta de ${selectedPlayerUsername}? Esta ação é irreversível.`)) {
-        try {
-            await deleteDoc(doc(db, "players", selectedPlayerId));
-            adminFeedbackMessage.textContent = `A conta de ${selectedPlayerUsername} foi excluída permanentemente.`;
-            playerDetailsPanel.classList.add("hidden");
-            populatePlayerList();
-        } catch (e) {
-            console.error("Erro ao excluir conta:", e);
-            adminFeedbackMessage.textContent = "Erro ao excluir conta.";
-        }
-    }
+  }
 }
 
 async function handleAddAdmin() {
-    try {
-        const docRef = doc(db, "players", selectedPlayerId);
-        await updateDoc(docRef, { isAdmin: true });
-        adminFeedbackMessage.textContent = `${selectedPlayerUsername} agora é um administrador.`;
-    } catch (e) {
-        console.error("Erro ao adicionar admin:", e);
-        adminFeedbackMessage.textContent = "Erro ao adicionar admin.";
-    }
+  try {
+    const docRef = doc(db, "players", selectedPlayerId);
+    await updateDoc(docRef, { isAdmin: true });
+    adminFeedbackMessage.textContent = `${selectedPlayerUsername} agora é um administrador.`;
+  } catch (e) {
+    console.error("Erro ao adicionar admin:", e);
+    adminFeedbackMessage.textContent = "Erro ao adicionar admin.";
+  }
 }
 
 async function handleRemoveAdmin() {
-    try {
-        if (selectedPlayerId === currentUserId) {
-            adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
-            return;
-        }
-        const docRef = doc(db, "players", selectedPlayerId);
-        await updateDoc(docRef, { isAdmin: false });
-        adminFeedbackMessage.textContent = `${selectedPlayerUsername} não é mais um administrador.`;
-    } catch (e) {
-        console.error("Erro ao remover admin:", e);
-        adminFeedbackMessage.textContent = "Erro ao remover admin.";
+  try {
+    if (selectedPlayerId === currentUserId) {
+      adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
+      return;
     }
+    const docRef = doc(db, "players", selectedPlayerId);
+    await updateDoc(docRef, { isAdmin: false });
+    adminFeedbackMessage.textContent = `${selectedPlayerUsername} não é mais um administrador.`;
+  } catch (e) {
+    console.error("Erro ao remover admin:", e);
+    adminFeedbackMessage.textContent = "Erro ao remover admin.";
+  }
 }
 
 function updateAdminInventoryUI(inventoryData) {
-    const adminInventoryItemsEl = document.getElementById("admin-inventory-items");
-    if (!adminInventoryItemsEl) return;
-    adminInventoryItemsEl.innerHTML = "";
-    if (!inventoryData || Object.values(inventoryData).length === 0) {
-        adminInventoryItemsEl.textContent = "Inventário Vazio";
-    } else {
-        Object.values(inventoryData).forEach(item => {
-            const div = document.createElement("div");
-            div.classList.add("inventory-item", item.rarity);
-            div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
-            adminInventoryItemsEl.appendChild(div);
-        });
-    }
+  const adminInventoryItemsEl = document.getElementById("admin-inventory-items");
+  if (!adminInventoryItemsEl) return;
+  adminInventoryItemsEl.innerHTML = "";
+  if (!inventoryData || Object.values(inventoryData).length === 0) {
+    adminInventoryItemsEl.textContent = "Inventário Vazio";
+  } else {
+    Object.values(inventoryData).forEach(item => {
+      const div = document.createElement("div");
+      div.classList.add("inventory-item", item.rarity);
+      div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
+      adminInventoryItemsEl.appendChild(div);
+    });
+  }
 }
 
 async function handleGiveCoins() {
-    if (!selectedPlayerId) {
-        adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-        return;
-    }
-    const giveCoinsInput = document.getElementById("give-coins-input");
-    const value = parseInt(giveCoinsInput.value);
-    if (isNaN(value) || value <= 0) {
-        adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
-        return;
-    }
-    try {
-        const docRef = doc(db, "players", selectedPlayerId);
-        const docSnap = await getDoc(docRef);
-        const currentScore = (docSnap.exists() && docSnap.data().score) ? docSnap.data().score : 0;
-        await updateDoc(docRef, { score: currentScore + value });
-        playerDetailsScore.textContent = Math.floor(currentScore + value);
-        adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
-    } catch (e) {
-        console.error("Erro ao dar moedas:", e);
-        adminFeedbackMessage.textContent = "Erro ao dar moedas.";
-    }
+  if (!selectedPlayerId) {
+    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
+    return;
+  }
+  const giveCoinsInput = document.getElementById("give-coins-input");
+  const value = parseInt(giveCoinsInput.value);
+  if (isNaN(value) || value <= 0) {
+    adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
+    return;
+  }
+  try {
+    const docRef = doc(db, "players", selectedPlayerId);
+    const docSnap = await getDoc(docRef);
+    const currentScore = (docSnap.exists() && docSnap.data().score) ? docSnap.data().score : 0;
+    await updateDoc(docRef, { score: currentScore + value });
+    playerDetailsScore.textContent = Math.floor(currentScore + value);
+    adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
+  } catch (e) {
+    console.error("Erro ao dar moedas:", e);
+    adminFeedbackMessage.textContent = "Erro ao dar moedas.";
+  }
 }
 
 async function handleGiveTreasure() {
-    if (!selectedPlayerId) {
-        adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-        return;
+  if (!selectedPlayerId) {
+    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
+    return;
+  }
+  const giveTreasureSelect = document.getElementById("give-treasure-select");
+  const treasureName = giveTreasureSelect.value;
+  const treasureToGive = treasures.find(t => t.name === treasureName);
+  try {
+    const docRef = doc(db, "players", selectedPlayerId);
+    const docSnap = await getDoc(docRef);
+    const currentData = docSnap.exists() ? docSnap.data() : {};
+    const currentInventory = currentData.inventory || {};
+    if (!currentInventory[treasureName]) {
+      currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
     }
-    const giveTreasureSelect = document.getElementById("give-treasure-select");
-    const treasureName = giveTreasureSelect.value;
-    const treasureToGive = treasures.find(t => t.name === treasureName);
-    try {
-        const docRef = doc(db, "players", selectedPlayerId);
-        const docSnap = await getDoc(docRef);
-        const currentData = docSnap.exists() ? docSnap.data() : {};
-        const currentInventory = currentData.inventory || {};
-        if (!currentInventory[treasureName]) {
-            currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
-        }
-        currentInventory[treasureName].quantity++;
-        await updateDoc(docRef, {
-            inventory: currentInventory,
-            totalItems: (currentData.totalItems || 0) + 1
-        });
-        updateAdminInventoryUI(currentInventory);
-        adminFeedbackMessage.textContent = `${treasureToGive.name} adicionado ao inventário de ${selectedPlayerUsername}.`;
-    } catch (e) {
-        console.error("Erro ao dar tesouro:", e);
-        adminFeedbackMessage.textContent = "Erro ao dar tesouro.";
-    }
+    currentInventory[treasureName].quantity++;
+    await updateDoc(docRef, {
+      inventory: currentInventory,
+      totalItems: (currentData.totalItems || 0) + 1
+    });
+    updateAdminInventoryUI(currentInventory);
+    adminFeedbackMessage.textContent = `${treasureToGive.name} adicionado ao inventário de ${selectedPlayerUsername}.`;
+  } catch (e) {
+    console.error("Erro ao dar tesouro:", e);
+    adminFeedbackMessage.textContent = "Erro ao dar tesouro.";
+  }
 }
 
 async function handleIncreaseCapacity() {
-    if (!selectedPlayerId) {
-        adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
-        return;
-    }
-    const increaseCapacityInput = document.getElementById("increase-capacity-input");
-    const value = parseInt(increaseCapacityInput.value);
-    if (isNaN(value) || value <= 0) {
-        adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
-        return;
-    }
-    try {
-        const docRef = doc(db, "players", selectedPlayerId);
-        const docSnap = await getDoc(docRef);
-        const currentCapacity = docSnap.exists() ? (docSnap.data().capacity || 20) : 20;
-        await updateDoc(docRef, { capacity: currentCapacity + value });
-        adminFeedbackMessage.textContent = `Capacidade de ${selectedPlayerUsername} aumentada em ${value}.`;
-    } catch (e) {
-        console.error("Erro ao aumentar capacidade:", e);
-        adminFeedbackMessage.textContent = "Erro ao aumentar capacidade.";
-    }
+  if (!selectedPlayerId) {
+    adminFeedbackMessage.textContent = "Nenhum jogador selecionado.";
+    return;
+  }
+  const increaseCapacityInput = document.getElementById("increase-capacity-input");
+  const value = parseInt(increaseCapacityInput.value);
+  if (isNaN(value) || value <= 0) {
+    adminFeedbackMessage.textContent = "Por favor, insira uma quantidade válida.";
+    return;
+  }
+  try {
+    const docRef = doc(db, "players", selectedPlayerId);
+    const docSnap = await getDoc(docRef);
+    const currentCapacity = docSnap.exists() ? (docSnap.data().capacity || 20) : 20;
+    await updateDoc(docRef, { capacity: currentCapacity + value });
+    adminFeedbackMessage.textContent = `Capacidade de ${selectedPlayerUsername} aumentada em ${value}.`;
+  } catch (e) {
+    console.error("Erro ao aumentar capacidade:", e);
+    adminFeedbackMessage.textContent = "Erro ao aumentar capacidade.";
+  }
 }
 
 async function saveGame() {
-    if (!currentUserId) return;
-    try {
-        const userData = {
-            score: score,
-            inventory: inventory,
-            capacity: capacity,
-            totalItems: totalItems,
-            expandCost: expandCost,
-            username: usernameInput.value,
-            isAdmin: ADMIN_IDS.includes(currentUserId)
-        };
-        await setDoc(doc(db, "players", currentUserId), userData);
-        console.log("Jogo salvo com sucesso no Firebase!");
-    } catch (e) {
-        console.error("Erro ao salvar o jogo:", e);
-    }
+  if (!currentUserId) return;
+  try {
+    const userData = {
+      score: score,
+      inventory: inventory,
+      capacity: capacity,
+      totalItems: totalItems,
+      expandCost: expandCost,
+      username: usernameInput.value,
+      isAdmin: ADMIN_IDS.includes(currentUserId)
+    };
+    await setDoc(doc(db, "players", currentUserId), userData);
+    console.log("Jogo salvo com sucesso no Firebase!");
+  } catch (e) {
+    console.error("Erro ao salvar o jogo:", e);
+  }
 }
 
 async function loadGame(userData) {
-    score = userData.score || 0;
-    inventory = userData.inventory || {};
-    capacity = userData.capacity || 20;
-    totalItems = userData.totalItems || 0;
-    expandCost = userData.expandCost || 100;
+  score = userData.score || 0;
+  inventory = userData.inventory || {};
+  capacity = userData.capacity || 20;
+  totalItems = userData.totalItems || 0;
+  expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username;
-    accountIdDisplay.textContent = currentUserId;
+  usernameDisplay.textContent = userData.username;
+  accountIdDisplay.textContent = currentUserId;
 
-    loginPanel.classList.add("hidden");
-    gameArea.classList.remove("hidden");
+  loginPanel.classList.add("hidden");
+  gameArea.classList.remove("hidden");
 
-    if (userData.isAdmin) {
-        if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
-    } else {
-        if (openAdminPanelButton.parentNode) {
-            openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
-        }
+  if (userData.isAdmin) {
+    if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
+  } else {
+    if (openAdminPanelButton.parentNode) {
+      openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
     }
-    updateInventoryUI();
-    updateCapacityBar();
-    message.textContent = "";
-    if (lastFrameTime === 0) {
-        requestAnimationFrame(gameLoop);
-    }
+  }
+  updateInventoryUI();
+  updateCapacityBar();
+  message.textContent = "";
+  if (lastFrameTime === 0) {
+    requestAnimationFrame(gameLoop);
+  }
 }
 
 window.addEventListener('beforeunload', async (event) => {
-    if (currentUserId) {
-        await saveGame();
-    }
+  if (currentUserId) {
+    await saveGame();
+  }
 });
 
+// AQUI ESTÃO OS AJUSTES PARA O LOGIN POR NOME DE USUÁRIO
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUserId = user.uid;
-        usernameInput.value = user.email;
-        try {
-            const docRef = doc(db, "players", currentUserId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                await loadGame(docSnap.data());
-            } else {
-                console.log("Criando novo perfil para o usuário logado.");
-                const initialData = {
-                    username: user.email,
-                    score: 100,
-                    inventory: {},
-                    capacity: 20,
-                    totalItems: 0,
-                    expandCost: 100,
-                    isAdmin: ADMIN_IDS.includes(currentUserId)
-                };
-                await setDoc(docRef, initialData);
-                await loadGame(initialData);
-            }
-        } catch (e) {
-            console.error("Erro ao carregar dados do usuário:", e);
-            showMessage("Erro ao carregar seu perfil. Tente novamente.");
-        }
-    } else {
-        currentUserId = null;
-        loginPanel.classList.remove("hidden");
-        gameArea.classList.add("hidden");
+  if (user) {
+    currentUserId = user.uid;
+    // Remova ou comente a linha abaixo para não usar o email como username
+    // usernameInput.value = user.email;
+    try {
+      const docRef = doc(db, "players", currentUserId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await loadGame(docSnap.data());
+      } else {
+        console.log("Criando novo perfil para o usuário logado.");
+        // O Firebase Auth usa o e-mail, então o username inicial será o e-mail fictício
+        const initialData = {
+          username: usernameInput.value, // Agora salvamos o nome de usuário puro!
+          score: 100,
+          inventory: {},
+          capacity: 20,
+          totalItems: 0,
+          expandCost: 100,
+          isAdmin: ADMIN_IDS.includes(currentUserId)
+        };
+        await setDoc(docRef, initialData);
+        await loadGame(initialData);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar dados do usuário:", e);
+      showMessage("Erro ao carregar seu perfil. Tente novamente.");
     }
+  } else {
+    currentUserId = null;
+    loginPanel.classList.remove("hidden");
+    gameArea.classList.add("hidden");
+  }
 });
 
 registerButton.addEventListener("click", async () => {
-    const email = usernameInput.value;
-    const password = passwordInput.value;
-    if (!email || !password || password.length < 6) {
-        showMessage("E-mail e senha (mínimo 6 caracteres) são obrigatórios.");
-        return;
-    }
-    try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        showMessage("Conta criada com sucesso!");
-    } catch (error) {
-        showMessage("Erro ao criar conta: " + error.message);
-        console.error(error);
-    }
+  // NOVO: Usamos o valor do username como o login e adicionamos um sufixo
+  const username = usernameInput.value;
+  const password = passwordInput.value;
+  // Criamos um e-mail fictício para o Firebase
+  const emailFicticio = `${username}@meujogo.com`;
+
+  if (!username || !password || password.length < 6) {
+    showMessage("Nome de usuário e senha (mínimo 6 caracteres) são obrigatórios.");
+    return;
+  }
+
+  try {
+    await createUserWithEmailAndPassword(auth, emailFicticio, password);
+    showMessage("Conta criada com sucesso!");
+  } catch (error) {
+    showMessage("Erro ao criar conta: " + error.message);
+    console.error(error);
+  }
 });
 
 loginButton.addEventListener("click", async () => {
-    const email = usernameInput.value;
-    const password = passwordInput.value;
-    if (!email || !password) {
-        showMessage("E-mail e senha são obrigatórios.");
-        return;
-    }
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showMessage("Login realizado com sucesso!");
-    } catch (error) {
-        showMessage("Erro ao fazer login: " + error.message);
-        console.error(error);
-    }
+  // NOVO: Usamos o valor do username como o login e adicionamos um sufixo
+  const username = usernameInput.value;
+  const password = passwordInput.value;
+  // Criamos o e-mail fictício para o login
+  const emailFicticio = `${username}@meujogo.com`;
+
+  if (!username || !password) {
+    showMessage("Nome de usuário e senha são obrigatórios.");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, emailFicticio, password);
+    showMessage("Login realizado com sucesso!");
+  } catch (error) {
+    showMessage("Erro ao fazer login: " + error.message);
+    console.error(error);
+  }
 });
 
 logoutButton.addEventListener("click", async () => {
-    try {
-        if (currentUserId) {
-            await saveGame();
-        }
-        await signOut(auth);
-        showMessage("Você saiu da sua conta.");
-    } catch (error) {
-        console.error("Erro ao sair da conta: ", error);
-        showMessage("Erro ao sair da conta: " + error.message);
+  try {
+    if (currentUserId) {
+      await saveGame();
     }
+    await signOut(auth);
+    showMessage("Você saiu da sua conta.");
+  } catch (error) {
+    console.error("Erro ao sair da conta: ", error);
+    showMessage("Erro ao sair da conta: " + error.message);
+  }
 });
 
 function showMessage(text) {
-    message.textContent = text;
+  message.textContent = text;
 }
 
 function getRandomTreasure() {
-    const rand = Math.random() * 100;
-    let sum = 0;
-    for (let t of treasures) {
-        sum += t.chance;
-        if (rand <= sum) return t;
-    }
-    return treasures[0];
+  const rand = Math.random() * 100;
+  let sum = 0;
+  for (let t of treasures) {
+    sum += t.chance;
+    if (rand <= sum) return t;
+  }
+  return treasures[0];
 }
 
 function createTreasure() {
-    const treasureData = getRandomTreasure();
-    const treasure = document.createElement("div");
-    treasure.classList.add("treasure", treasureData.rarity);
-    treasure.dataset.name = treasureData.name;
-    treasure.dataset.value = treasureData.value;
-    treasure.dataset.auria = treasureData.auria;
-    treasure.dataset.img = treasureData.img;
+  const treasureData = getRandomTreasure();
+  const treasure = document.createElement("div");
+  treasure.classList.add("treasure", treasureData.rarity);
+  treasure.dataset.name = treasureData.name;
+  treasure.dataset.value = treasureData.value;
+  treasure.dataset.auria = treasureData.auria;
+  treasure.dataset.img = treasureData.img;
 
-    // Inicializa posição/estilo para evitar NaN no gameLoop
-    treasure.style.position = "absolute";
-    // começa acima da esteira
-    treasure.style.top = "-60px";
-    // left aleatório dentro da largura do conveyor
-    const beltRect = conveyorBelt.getBoundingClientRect();
-    const maxLeft = Math.max(beltRect.width - 50, 0);
-    const leftPx = Math.floor(Math.random() * maxLeft);
-    treasure.style.left = leftPx + "px";
+  treasure.style.position = "absolute";
+  treasure.style.top = "-60px";
+  const beltRect = conveyorBelt.getBoundingClientRect();
+  const maxLeft = Math.max(beltRect.width - 50, 0);
+  const leftPx = Math.floor(Math.random() * maxLeft);
+  treasure.style.left = leftPx + "px";
 
-    treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
-    conveyorBelt.appendChild(treasure);
-    treasure.addEventListener("click", () => openPurchaseModal(treasure, treasureData));
+  treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
+  conveyorBelt.appendChild(treasure);
+  treasure.addEventListener("click", () => openPurchaseModal(treasure, treasureData));
 }
 
 function openPurchaseModal(treasureElement, treasureData) {
-    purchaseImg.src = treasureData.img;
-    purchaseName.textContent = treasureData.name;
-    purchaseValue.textContent = treasureData.value;
-    purchaseAuria.textContent = treasureData.auria;
-    buyButton.onclick = () => {
-        purchaseModal.classList.remove("open");
-        buyTreasureWithAnimation(treasureElement, treasureData);
-    };
-    purchaseModal.classList.add("open");
+  purchaseImg.src = treasureData.img;
+  purchaseName.textContent = treasureData.name;
+  purchaseValue.textContent = treasureData.value;
+  purchaseAuria.textContent = treasureData.auria;
+  buyButton.onclick = () => {
+    purchaseModal.classList.remove("open");
+    buyTreasureWithAnimation(treasureElement, treasureData);
+  };
+  purchaseModal.classList.add("open");
 }
 
 function buyTreasureWithAnimation(treasureElement, treasureData) {
-    if (totalItems >= capacity) { alert("Inventário cheio!"); return; }
-    if (score < treasureData.value) { alert("Moedas insuficientes!"); return; }
-    score -= treasureData.value;
-    if (!inventory[treasureData.name]) {
-        inventory[treasureData.name] = { ...treasureData, quantity: 0 };
-    }
-    inventory[treasureData.name].quantity++;
-    totalItems++;
-    updateInventoryUI();
-    updateCapacityBar();
-    saveGame();
+  if (totalItems >= capacity) {
+    alert("Inventário cheio!");
+    return;
+  }
+  if (score < treasureData.value) {
+    alert("Moedas insuficientes!");
+    return;
+  }
+  score -= treasureData.value;
+  if (!inventory[treasureData.name]) {
+    inventory[treasureData.name] = { ...treasureData, quantity: 0 };
+  }
+  inventory[treasureData.name].quantity++;
+  totalItems++;
+  updateInventoryUI();
+  updateCapacityBar();
+  saveGame();
 
-    // animação: usamos getBoundingClientRect() para pegar posição atual
-    const treasureRect = treasureElement.getBoundingClientRect();
-    const inventoryRect = inventoryButton.getBoundingClientRect();
+  const treasureRect = treasureElement.getBoundingClientRect();
+  const inventoryRect = inventoryButton.getBoundingClientRect();
 
-    // Move o elemento para body para manipular posição fixa sem constraints do container
-    treasureElement.style.position = "fixed";
-    treasureElement.style.left = treasureRect.left + "px";
-    treasureElement.style.top = treasureRect.top + "px";
-    treasureElement.style.width = treasureRect.width + "px";
-    treasureElement.style.height = treasureRect.height + "px";
-    treasureElement.style.transition = "all 1s ease-in-out";
-    document.body.appendChild(treasureElement);
+  treasureElement.style.position = "fixed";
+  treasureElement.style.left = treasureRect.left + "px";
+  treasureElement.style.top = treasureRect.top + "px";
+  treasureElement.style.width = treasureRect.width + "px";
+  treasureElement.style.height = treasureRect.height + "px";
+  treasureElement.style.transition = "all 1s ease-in-out";
+  document.body.appendChild(treasureElement);
 
-    const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
-    const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
+  const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
+  const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
 
-    requestAnimationFrame(() => {
-        treasureElement.style.left = targetX + "px";
-        treasureElement.style.top = targetY + "px";
-        treasureElement.style.width = "30px";
-        treasureElement.style.height = "30px";
-        treasureElement.style.opacity = "0";
-    });
+  requestAnimationFrame(() => {
+    treasureElement.style.left = targetX + "px";
+    treasureElement.style.top = targetY + "px";
+    treasureElement.style.width = "30px";
+    treasureElement.style.height = "30px";
+    treasureElement.style.opacity = "0";
+  });
 
-    setTimeout(() => {
-        if (treasureElement.parentNode) treasureElement.remove();
-    }, 1000);
+  setTimeout(() => {
+    if (treasureElement.parentNode) treasureElement.remove();
+  }, 1000);
 }
 
 function updateInventoryUI() {
-    inventoryItems.innerHTML = "";
-    Object.values(inventory).forEach(item => {
-        const div = document.createElement("div");
-        div.classList.add("inventory-item", item.rarity);
-        div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
-        if (isViewingOtherPlayer) {
-            div.style.cursor = "default";
-            div.onclick = null;
-        } else {
-            div.addEventListener("click", () => openInfoModal(item));
-        }
-        inventoryItems.appendChild(div);
-    });
+  inventoryItems.innerHTML = "";
+  Object.values(inventory).forEach(item => {
+    const div = document.createElement("div");
+    div.classList.add("inventory-item", item.rarity);
+    div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
     if (isViewingOtherPlayer) {
-        expandButton.style.display = "none";
-        logoutButton.style.display = "none";
-        let backButton = document.getElementById("back-button");
-        if (!backButton) {
-            backButton = document.createElement("button");
-            backButton.id = "back-button";
-            backButton.classList.add("button", "logout-button");
-            backButton.textContent = "Voltar ao meu inventário";
-            backButton.onclick = exitViewMode;
-            inventoryContainer.appendChild(backButton);
-        }
-        const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
-        if (headerTitle) headerTitle.textContent = "Inventário (Visualização)";
-        const scoreP = document.querySelector("#inventory-container p.score-display");
-        if (scoreP) scoreP.textContent = "Moedas: " + Math.floor(score);
-        const userP = document.querySelector("#inventory-container p.username-display");
-        if (userP) userP.textContent = "Usuário: " + usernameDisplay.textContent;
-        const idP = document.querySelector("#inventory-container p.account-id");
-        if (idP) idP.textContent = "ID da Conta: " + accountIdDisplay.textContent;
+      div.style.cursor = "default";
+      div.onclick = null;
     } else {
-        expandButton.style.display = "block";
-        logoutButton.style.display = "block";
-        const backButton = document.getElementById("back-button");
-        if (backButton) backButton.remove();
-        const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
-        if (headerTitle) headerTitle.textContent = "Inventário";
-        const scoreP = document.querySelector("#inventory-container p.score-display");
-        if (scoreP) scoreP.textContent = `Moedas: ${Math.floor(score)}`;
-        const userP = document.querySelector("#inventory-container p.username-display");
-        if (userP) userP.textContent = `Usuário: ${usernameInput.value}`;
-        const idP = document.querySelector("#inventory-container p.account-id");
-        if (idP) idP.textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
+      div.addEventListener("click", () => openInfoModal(item));
     }
-    scoreDisplay.textContent = Math.floor(score);
-    totalItemsDisplay.textContent = totalItems;
-    maxCapacityDisplay.textContent = capacity;
+    inventoryItems.appendChild(div);
+  });
+  if (isViewingOtherPlayer) {
+    expandButton.style.display = "none";
+    logoutButton.style.display = "none";
+    let backButton = document.getElementById("back-button");
+    if (!backButton) {
+      backButton = document.createElement("button");
+      backButton.id = "back-button";
+      backButton.classList.add("button", "logout-button");
+      backButton.textContent = "Voltar ao meu inventário";
+      backButton.onclick = exitViewMode;
+      inventoryContainer.appendChild(backButton);
+    }
+    const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
+    if (headerTitle) headerTitle.textContent = "Inventário (Visualização)";
+    const scoreP = document.querySelector("#inventory-container p.score-display");
+    if (scoreP) scoreP.textContent = "Moedas: " + Math.floor(score);
+    const userP = document.querySelector("#inventory-container p.username-display");
+    if (userP) userP.textContent = "Usuário: " + usernameDisplay.textContent;
+    const idP = document.querySelector("#inventory-container p.account-id");
+    if (idP) idP.textContent = "ID da Conta: " + accountIdDisplay.textContent;
+  } else {
+    expandButton.style.display = "block";
+    logoutButton.style.display = "block";
+    const backButton = document.getElementById("back-button");
+    if (backButton) backButton.remove();
+    const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
+    if (headerTitle) headerTitle.textContent = "Inventário";
+    const scoreP = document.querySelector("#inventory-container p.score-display");
+    if (scoreP) scoreP.textContent = `Moedas: ${Math.floor(score)}`;
+    const userP = document.querySelector("#inventory-container p.username-display");
+    if (userP) userP.textContent = `Usuário: ${usernameInput.value}`;
+    const idP = document.querySelector("#inventory-container p.account-id");
+    if (idP) idP.textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
+  }
+  scoreDisplay.textContent = Math.floor(score);
+  totalItemsDisplay.textContent = totalItems;
+  maxCapacityDisplay.textContent = capacity;
 }
 
 function openInfoModal(item) {
-    if (isViewingOtherPlayer) return;
-    infoImg.src = item.img;
-    infoName.textContent = item.name;
-    infoQuantity.textContent = item.quantity;
-    infoAuria.textContent = item.auria;
-    infoValue.textContent = item.value;
-    sellButton.onclick = () => sellItem(item);
-    infoModal.classList.add("open");
+  if (isViewingOtherPlayer) return;
+  infoImg.src = item.img;
+  infoName.textContent = item.name;
+  infoQuantity.textContent = item.quantity;
+  infoAuria.textContent = item.auria;
+  infoValue.textContent = item.value;
+  sellButton.onclick = () => sellItem(item);
+  infoModal.classList.add("open");
 }
 
 function exitViewMode() {
-    score = savedAdminState.score;
-    inventory = savedAdminState.inventory;
-    capacity = savedAdminState.capacity;
-    totalItems = savedAdminState.totalItems;
-    expandCost = savedAdminState.expandCost;
-    usernameDisplay.textContent = savedAdminState.username;
-    accountIdDisplay.textContent = savedAdminState.id;
-    isViewingOtherPlayer = false;
-    updateInventoryUI();
-    updateCapacityBar();
-    inventoryContainer.classList.remove("open");
+  score = savedAdminState.score;
+  inventory = savedAdminState.inventory;
+  capacity = savedAdminState.capacity;
+  totalItems = savedAdminState.totalItems;
+  expandCost = savedAdminState.expandCost;
+  usernameDisplay.textContent = savedAdminState.username;
+  accountIdDisplay.textContent = savedAdminState.id;
+  isViewingOtherPlayer = false;
+  updateInventoryUI();
+  updateCapacityBar();
+  inventoryContainer.classList.remove("open");
 }
 
 function sellItem(item) {
-    if (item.quantity <= 0) return;
-    item.quantity--;
-    totalItems--;
-    score += item.value;
-    if (item.quantity === 0) delete inventory[item.name];
-    updateInventoryUI();
-    updateCapacityBar();
-    infoModal.classList.remove("open");
-    saveGame();
+  if (item.quantity <= 0) return;
+  item.quantity--;
+  totalItems--;
+  score += item.value;
+  if (item.quantity === 0) delete inventory[item.name];
+  updateInventoryUI();
+  updateCapacityBar();
+  infoModal.classList.remove("open");
+  saveGame();
 }
 
 function updateCapacityBar() {
-    const percent = capacity > 0 ? (totalItems / capacity) * 100 : 0;
-    capacityFill.style.width = percent + "%";
+  const percent = capacity > 0 ? (totalItems / capacity) * 100 : 0;
+  capacityFill.style.width = percent + "%";
 }
 
 function generateAuria() {
-    let totalAuria = 0;
-    Object.values(inventory).forEach(item => {
-        totalAuria += item.quantity * item.auria;
-    });
-    score += totalAuria;
-    updateInventoryUI();
-    saveGame();
+  let totalAuria = 0;
+  Object.values(inventory).forEach(item => {
+    totalAuria += item.quantity * item.auria;
+  });
+  score += totalAuria;
+  updateInventoryUI();
+  saveGame();
 }
 
 expandButton.addEventListener("click", () => {
-    if (score >= expandCost) {
-        score -= expandCost;
-        capacity += 10;
-        expandCost += 50;
-        expandButton.textContent = `Aumentar Capacidade (${expandCost} moedas)`;
-        updateInventoryUI();
-        updateCapacityBar();
-        saveGame();
-    } else {
-        alert("Moedas insuficientes!");
-    }
+  if (score >= expandCost) {
+    score -= expandCost;
+    capacity += 10;
+    expandCost += 50;
+    expandButton.textContent = `Aumentar Capacidade (${expandCost} moedas)`;
+    updateInventoryUI();
+    updateCapacityBar();
+    saveGame();
+  } else {
+    alert("Moedas insuficientes!");
+  }
 });
 
 inventoryButton.addEventListener("click", () => inventoryContainer.classList.add("open"));
 closeInventoryButton.addEventListener("click", () => {
-    if (isViewingOtherPlayer) {
-        exitViewMode();
-    } else {
-        inventoryContainer.classList.remove("open");
-    }
+  if (isViewingOtherPlayer) {
+    exitViewMode();
+  } else {
+    inventoryContainer.classList.remove("open");
+  }
 });
 closePurchaseButton.addEventListener("click", () => purchaseModal.classList.remove("open"));
 closeInfoButton.addEventListener("click", () => infoModal.classList.remove("open"));
 
 // GAME LOOP
 function gameLoop(currentTime) {
-    // Se for a primeira chamada, inicializa lastFrameTime
-    if (!lastFrameTime) lastFrameTime = currentTime;
+  if (!lastFrameTime) lastFrameTime = currentTime;
 
-    // Se a aba estiver oculta, não acumular tempo nem processar spawns:
-    if (document.hidden) {
-        lastFrameTime = currentTime;
-        requestAnimationFrame(gameLoop);
-        return;
-    }
-
-    let deltaTime = currentTime - lastFrameTime;
-    deltaTime = Math.min(deltaTime, MAX_DELTA); // evita spikes gigantes
+  if (document.hidden) {
     lastFrameTime = currentTime;
-
-    treasureSpawnTimer += deltaTime;
-    if (treasureSpawnTimer >= TREASURE_SPAWN_INTERVAL) {
-        createTreasure();
-        treasureSpawnTimer = 0;
-    }
-    auriaTimer += deltaTime;
-    if (auriaTimer >= AURIA_GEN_INTERVAL) {
-        generateAuria();
-        auriaTimer = 0;
-    }
-    document.querySelectorAll('.treasure').forEach(treasure => {
-        // garante que exista um top numérico válido
-        let currentTop = parseFloat(treasure.style.top);
-        if (Number.isNaN(currentTop)) currentTop = -60;
-        // velocidade baseada no deltaTime
-        treasure.style.top = `${currentTop + (deltaTime * 0.05)}px`;
-        // se o elemento ultrapassar a altura do conveyor, remove
-        const beltRect = conveyorBelt.getBoundingClientRect();
-        const treasureTop = parseFloat(treasure.style.top) || 0;
-        if (treasureTop > beltRect.height + 100) { // margem
-            if (treasure.parentNode) treasure.remove();
-        }
-    });
     requestAnimationFrame(gameLoop);
+    return;
+  }
+
+  let deltaTime = currentTime - lastFrameTime;
+  deltaTime = Math.min(deltaTime, MAX_DELTA);
+  lastFrameTime = currentTime;
+
+  treasureSpawnTimer += deltaTime;
+  if (treasureSpawnTimer >= TREASURE_SPAWN_INTERVAL) {
+    createTreasure();
+    treasureSpawnTimer = 0;
+  }
+  auriaTimer += deltaTime;
+  if (auriaTimer >= AURIA_GEN_INTERVAL) {
+    generateAuria();
+    auriaTimer = 0;
+  }
+  document.querySelectorAll('.treasure').forEach(treasure => {
+    let currentTop = parseFloat(treasure.style.top);
+    if (Number.isNaN(currentTop)) currentTop = -60;
+    treasure.style.top = `${currentTop + (deltaTime * 0.05)}px`;
+
+    const beltRect = conveyorBelt.getBoundingClientRect();
+    const treasureTop = parseFloat(treasure.style.top) || 0;
+    if (treasureTop > beltRect.height + 100) {
+      if (treasure.parentNode) treasure.remove();
+    }
+  });
+  requestAnimationFrame(gameLoop);
 }
 
 setInterval(() => {
-    if (currentUserId) {
-        saveGame();
-    }
+  if (currentUserId) {
+    saveGame();
+  }
 }, 60000);
