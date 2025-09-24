@@ -5,7 +5,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
 // 🚩 SUBSTITUA ISSO: Cole a configuração do SEU NOVO projeto do Firebase aqui.
 const firebaseConfig = {
   apiKey: "AIzaSyB3jZXUDV0xJhuyKDY8zKe_Ym26R-W6E4o",
@@ -87,6 +86,7 @@ let treasureSpawnTimer = 0;
 let auriaTimer = 0;
 const TREASURE_SPAWN_INTERVAL = 3000;
 const AURIA_GEN_INTERVAL = 1000;
+const MAX_DELTA = 1000; // ms - limita deltaTime para evitar spikes ao voltar da aba
 
 const newAdminPanel = document.getElementById("new-admin-panel");
 const closeAdminPanelButton = document.getElementById("close-admin-panel");
@@ -147,8 +147,8 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
 
-    playerSnapshot.forEach(doc => {
-        const userData = doc.data();
+    playerSnapshot.forEach(docSnap => {
+        const userData = docSnap.data();
         const playerItem = document.createElement("div");
         playerItem.classList.add("player-list-item");
 
@@ -156,10 +156,10 @@ async function populatePlayerList() {
         playerNameSpan.textContent = userData.username;
         playerItem.appendChild(playerNameSpan);
 
-        playerItem.dataset.id = doc.id;
+        playerItem.dataset.id = docSnap.id;
         playerItem.dataset.username = userData.username;
         playerItem.addEventListener("click", () => {
-            selectPlayer(doc.id, userData.username);
+            selectPlayer(docSnap.id, userData.username);
         });
         playerListContainer.appendChild(playerItem);
     });
@@ -268,17 +268,17 @@ async function handleRemoveAdmin() {
 }
 
 function updateAdminInventoryUI(inventoryData) {
-    const adminInventoryItems = document.getElementById("admin-inventory-items");
-    if (!adminInventoryItems) return;
-    adminInventoryItems.innerHTML = "";
-    if (Object.values(inventoryData).length === 0) {
-        adminInventoryItems.textContent = "Inventário Vazio";
+    const adminInventoryItemsEl = document.getElementById("admin-inventory-items");
+    if (!adminInventoryItemsEl) return;
+    adminInventoryItemsEl.innerHTML = "";
+    if (!inventoryData || Object.values(inventoryData).length === 0) {
+        adminInventoryItemsEl.textContent = "Inventário Vazio";
     } else {
         Object.values(inventoryData).forEach(item => {
             const div = document.createElement("div");
             div.classList.add("inventory-item", item.rarity);
             div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span class="item-quantity">${item.quantity}</span>`;
-            adminInventoryItems.appendChild(div);
+            adminInventoryItemsEl.appendChild(div);
         });
     }
 }
@@ -297,7 +297,7 @@ async function handleGiveCoins() {
     try {
         const docRef = doc(db, "players", selectedPlayerId);
         const docSnap = await getDoc(docRef);
-        const currentScore = docSnap.data().score || 0;
+        const currentScore = (docSnap.exists() && docSnap.data().score) ? docSnap.data().score : 0;
         await updateDoc(docRef, { score: currentScore + value });
         playerDetailsScore.textContent = Math.floor(currentScore + value);
         adminFeedbackMessage.textContent = `${value} moedas adicionadas para ${selectedPlayerUsername}.`;
@@ -318,7 +318,7 @@ async function handleGiveTreasure() {
     try {
         const docRef = doc(db, "players", selectedPlayerId);
         const docSnap = await getDoc(docRef);
-        const currentData = docSnap.data();
+        const currentData = docSnap.exists() ? docSnap.data() : {};
         const currentInventory = currentData.inventory || {};
         if (!currentInventory[treasureName]) {
             currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
@@ -350,7 +350,7 @@ async function handleIncreaseCapacity() {
     try {
         const docRef = doc(db, "players", selectedPlayerId);
         const docSnap = await getDoc(docRef);
-        const currentCapacity = docSnap.data().capacity || 20;
+        const currentCapacity = docSnap.exists() ? (docSnap.data().capacity || 20) : 20;
         await updateDoc(docRef, { capacity: currentCapacity + value });
         adminFeedbackMessage.textContent = `Capacidade de ${selectedPlayerUsername} aumentada em ${value}.`;
     } catch (e) {
@@ -392,7 +392,7 @@ async function loadGame(userData) {
     gameArea.classList.remove("hidden");
 
     if (userData.isAdmin) {
-        gameArea.appendChild(openAdminPanelButton);
+        if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
     } else {
         if (openAdminPanelButton.parentNode) {
             openAdminPanelButton.parentNode.removeChild(openAdminPanelButton);
@@ -494,6 +494,7 @@ logoutButton.addEventListener("click", async () => {
 function showMessage(text) {
     message.textContent = text;
 }
+
 function getRandomTreasure() {
     const rand = Math.random() * 100;
     let sum = 0;
@@ -512,6 +513,17 @@ function createTreasure() {
     treasure.dataset.value = treasureData.value;
     treasure.dataset.auria = treasureData.auria;
     treasure.dataset.img = treasureData.img;
+
+    // Inicializa posição/estilo para evitar NaN no gameLoop
+    treasure.style.position = "absolute";
+    // começa acima da esteira
+    treasure.style.top = "-60px";
+    // left aleatório dentro da largura do conveyor
+    const beltRect = conveyorBelt.getBoundingClientRect();
+    const maxLeft = Math.max(beltRect.width - 50, 0);
+    const leftPx = Math.floor(Math.random() * maxLeft);
+    treasure.style.left = leftPx + "px";
+
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
     conveyorBelt.appendChild(treasure);
     treasure.addEventListener("click", () => openPurchaseModal(treasure, treasureData));
@@ -541,8 +553,12 @@ function buyTreasureWithAnimation(treasureElement, treasureData) {
     updateInventoryUI();
     updateCapacityBar();
     saveGame();
+
+    // animação: usamos getBoundingClientRect() para pegar posição atual
     const treasureRect = treasureElement.getBoundingClientRect();
     const inventoryRect = inventoryButton.getBoundingClientRect();
+
+    // Move o elemento para body para manipular posição fixa sem constraints do container
     treasureElement.style.position = "fixed";
     treasureElement.style.left = treasureRect.left + "px";
     treasureElement.style.top = treasureRect.top + "px";
@@ -550,8 +566,10 @@ function buyTreasureWithAnimation(treasureElement, treasureData) {
     treasureElement.style.height = treasureRect.height + "px";
     treasureElement.style.transition = "all 1s ease-in-out";
     document.body.appendChild(treasureElement);
+
     const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
     const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
+
     requestAnimationFrame(() => {
         treasureElement.style.left = targetX + "px";
         treasureElement.style.top = targetY + "px";
@@ -559,7 +577,10 @@ function buyTreasureWithAnimation(treasureElement, treasureData) {
         treasureElement.style.height = "30px";
         treasureElement.style.opacity = "0";
     });
-    setTimeout(() => treasureElement.remove(), 1000);
+
+    setTimeout(() => {
+        if (treasureElement.parentNode) treasureElement.remove();
+    }, 1000);
 }
 
 function updateInventoryUI() {
@@ -588,19 +609,27 @@ function updateInventoryUI() {
             backButton.onclick = exitViewMode;
             inventoryContainer.appendChild(backButton);
         }
-        document.querySelector("#inventory-container .inventory-header h2").textContent = "Inventário (Visualização)";
-        document.querySelector("#inventory-container p.score-display").textContent = "Moedas: " + Math.floor(score);
-        document.querySelector("#inventory-container p.username-display").textContent = "Usuário: " + usernameDisplay.textContent;
-        document.querySelector("#inventory-container p.account-id").textContent = "ID da Conta: " + accountIdDisplay.textContent;
+        const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
+        if (headerTitle) headerTitle.textContent = "Inventário (Visualização)";
+        const scoreP = document.querySelector("#inventory-container p.score-display");
+        if (scoreP) scoreP.textContent = "Moedas: " + Math.floor(score);
+        const userP = document.querySelector("#inventory-container p.username-display");
+        if (userP) userP.textContent = "Usuário: " + usernameDisplay.textContent;
+        const idP = document.querySelector("#inventory-container p.account-id");
+        if (idP) idP.textContent = "ID da Conta: " + accountIdDisplay.textContent;
     } else {
         expandButton.style.display = "block";
         logoutButton.style.display = "block";
         const backButton = document.getElementById("back-button");
         if (backButton) backButton.remove();
-        document.querySelector("#inventory-container .inventory-header h2").textContent = "Inventário";
-        document.querySelector("#inventory-container p.score-display").textContent = `Moedas: ${Math.floor(score)}`;
-        document.querySelector("#inventory-container p.username-display").textContent = `Usuário: ${usernameInput.value}`;
-        document.querySelector("#inventory-container p.account-id").textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
+        const headerTitle = document.querySelector("#inventory-container .inventory-header h2");
+        if (headerTitle) headerTitle.textContent = "Inventário";
+        const scoreP = document.querySelector("#inventory-container p.score-display");
+        if (scoreP) scoreP.textContent = `Moedas: ${Math.floor(score)}`;
+        const userP = document.querySelector("#inventory-container p.username-display");
+        if (userP) userP.textContent = `Usuário: ${usernameInput.value}`;
+        const idP = document.querySelector("#inventory-container p.account-id");
+        if (idP) idP.textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
     }
     scoreDisplay.textContent = Math.floor(score);
     totalItemsDisplay.textContent = totalItems;
@@ -645,7 +674,7 @@ function sellItem(item) {
 }
 
 function updateCapacityBar() {
-    const percent = (totalItems / capacity) * 100;
+    const percent = capacity > 0 ? (totalItems / capacity) * 100 : 0;
     capacityFill.style.width = percent + "%";
 }
 
@@ -684,9 +713,22 @@ closeInventoryButton.addEventListener("click", () => {
 closePurchaseButton.addEventListener("click", () => purchaseModal.classList.remove("open"));
 closeInfoButton.addEventListener("click", () => infoModal.classList.remove("open"));
 
+// GAME LOOP
 function gameLoop(currentTime) {
-    const deltaTime = currentTime - lastFrameTime;
+    // Se for a primeira chamada, inicializa lastFrameTime
+    if (!lastFrameTime) lastFrameTime = currentTime;
+
+    // Se a aba estiver oculta, não acumular tempo nem processar spawns:
+    if (document.hidden) {
+        lastFrameTime = currentTime;
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
+    let deltaTime = currentTime - lastFrameTime;
+    deltaTime = Math.min(deltaTime, MAX_DELTA); // evita spikes gigantes
     lastFrameTime = currentTime;
+
     treasureSpawnTimer += deltaTime;
     if (treasureSpawnTimer >= TREASURE_SPAWN_INTERVAL) {
         createTreasure();
@@ -698,10 +740,16 @@ function gameLoop(currentTime) {
         auriaTimer = 0;
     }
     document.querySelectorAll('.treasure').forEach(treasure => {
-        const currentTop = parseFloat(treasure.style.top || -60);
+        // garante que exista um top numérico válido
+        let currentTop = parseFloat(treasure.style.top);
+        if (Number.isNaN(currentTop)) currentTop = -60;
+        // velocidade baseada no deltaTime
         treasure.style.top = `${currentTop + (deltaTime * 0.05)}px`;
-        if (parseFloat(treasure.style.top) > conveyorBelt.offsetHeight) {
-            treasure.remove();
+        // se o elemento ultrapassar a altura do conveyor, remove
+        const beltRect = conveyorBelt.getBoundingClientRect();
+        const treasureTop = parseFloat(treasure.style.top) || 0;
+        if (treasureTop > beltRect.height + 100) { // margem
+            if (treasure.parentNode) treasure.remove();
         }
     });
     requestAnimationFrame(gameLoop);
