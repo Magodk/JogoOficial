@@ -176,7 +176,7 @@ async function selectPlayer(accountId, username) {
 
     const targetUser = docSnap.data();
     playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = targetUser.accountId;
+    playerDetailsId.textContent = accountId; // Usando o ID do Firestore
     playerDetailsScore.textContent = Math.floor(targetUser.score);
 
     playerDetailsPanel.classList.remove("hidden");
@@ -368,8 +368,7 @@ async function saveGame() {
             inventory: inventory,
             capacity: capacity,
             totalItems: totalItems,
-            expandCost: expandCost,
-            accountId: accountIdDisplay.textContent
+            expandCost: expandCost
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -386,7 +385,7 @@ async function loadGame(userData) {
     expandCost = userData.expandCost || 100;
 
     usernameDisplay.textContent = userData.username;
-    accountIdDisplay.textContent = userData.accountId;
+    accountIdDisplay.textContent = currentUserId; // Usando o ID padrão do Firebase
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
@@ -419,27 +418,18 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                // Se o documento existe, carrega os dados e o ID fixo
                 await loadGame(docSnap.data());
             } else {
-                // Isso só deve acontecer se o registro não salvou o doc
-                // ou se a conta foi criada manualmente no Firebase.
-                // Geramos e salvamos aqui para garantir a consistência.
                 console.log("Criando novo perfil para o usuário logado.");
-                
-                const newAccountId = Math.floor(Math.random() * 900000) + 100000;
-
                 const initialData = {
-                    username: user.email.split('@')[0], 
+                    username: user.email.split('@')[0],
                     score: 100,
                     inventory: {},
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
                     isAdmin: (user.email === "dono2@test.com"),
-                    accountId: newAccountId,
                 };
-                
                 await setDoc(docRef, initialData);
                 await loadGame(initialData);
             }
@@ -468,9 +458,6 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // CORREÇÃO: Gerar e salvar o ID fixo no Firestore imediatamente após a criação da conta.
-        const newAccountId = Math.floor(Math.random() * 900000) + 100000;
-        
         const initialData = {
             username: username,
             score: 100,
@@ -479,7 +466,6 @@ registerButton.addEventListener("click", async () => {
             totalItems: 0,
             expandCost: 100,
             isAdmin: (user.email === "dono2@test.com"),
-            accountId: newAccountId,
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
