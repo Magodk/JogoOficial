@@ -239,7 +239,7 @@ async function handleDeleteAccount() {
 }
 
 async function handleAddAdmin() {
-    // Usando runTransaction para garantir a atualização
+    // Usando runTransaction para garantir a atualização atômica
     try {
         const docRef = doc(db, "players", selectedPlayerId);
         await runTransaction(db, async (transaction) => {
@@ -257,7 +257,7 @@ async function handleRemoveAdmin() {
         adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
         return;
     }
-    // Usando runTransaction para garantir a atualização
+    // Usando runTransaction para garantir a atualização atômica
     try {
         const docRef = doc(db, "players", selectedPlayerId);
         await runTransaction(db, async (transaction) => {
