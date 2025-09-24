@@ -320,7 +320,52 @@ window.addEventListener('beforeunload', async (event) => {
   }
 });
 
-// FUNÇÃO DE LOGIN E CRIAÇÃO DE CONTA (AGORA CORRIGIDA)
+// AQUI ESTÃO AS NOVAS FUNÇÕES DE AUTENTICAÇÃO E CARREGAMENTO DE DADOS
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUserId = user.uid;
+        try {
+            const docRef = doc(db, "players", currentUserId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                const shortId = userData.shortId;
+                const isAdmin = ADMIN_IDS.includes(shortId);
+
+                // Carrega o jogo com os dados do usuário do Firestore
+                userData.isAdmin = isAdmin;
+                await loadGame(userData);
+            } else {
+                // Se a conta existe no Auth, mas não no Firestore, criamos o perfil
+                console.log("Criando perfil para usuário existente no Auth, mas sem perfil no Firestore.");
+                const shortId = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                const initialData = {
+                    username: user.email.split('@')[0],
+                    shortId: shortId,
+                    score: 100,
+                    inventory: {},
+                    capacity: 20,
+                    totalItems: 0,
+                    expandCost: 100,
+                    isAdmin: ADMIN_IDS.includes(shortId)
+                };
+                await setDoc(doc(db, "players", user.uid), initialData);
+                await loadGame(initialData);
+            }
+        } catch (e) {
+            console.error("Erro ao carregar dados do usuário:", e);
+            showMessage("Erro ao carregar seu perfil. Tente novamente.");
+        }
+    } else {
+        currentUserId = null;
+        loginPanel.classList.remove("hidden");
+        gameArea.classList.add("hidden");
+    }
+});
+
+// AQUI ESTÁ A LÓGICA CORRIGIDA PARA REGISTRO
 registerButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -332,14 +377,14 @@ registerButton.addEventListener("click", async () => {
     }
 
     try {
-        // Cria a conta do Firebase Auth
+        // Passo 1: Cria a conta do Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, emailFicticio, password);
         const userId = userCredential.user.uid;
-
-        // Cria o ID de 6 dígitos
+        
+        // Passo 2: Cria o ID de 6 dígitos no mesmo momento
         const shortId = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Cria e salva o perfil do usuário no Firestore com o ID de 6 dígitos
+        // Passo 3: Cria o perfil do usuário no Firestore (garantindo que o shortId seja salvo)
         const initialData = {
             username: username,
             shortId: shortId,
@@ -359,6 +404,7 @@ registerButton.addEventListener("click", async () => {
     }
 });
 
+// AQUI ESTÁ A LÓGICA CORRIGIDA PARA LOGIN
 loginButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -376,56 +422,6 @@ loginButton.addEventListener("click", async () => {
         showMessage("Erro ao fazer login: " + error.message);
         console.error(error);
     }
-});
-
-// AQUI ESTÃO OS AJUSTES PARA O LOGIN POR NOME DE USUÁRIO E O ID DE 6 DÍGITOS
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUserId = user.uid;
-    try {
-      const docRef = doc(db, "players", currentUserId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const userData = docSnap.data();
-        let shortId = userData.shortId;
-
-        // Para contas antigas que não têm shortId, cria e salva um novo
-        if (!shortId) {
-            shortId = Math.floor(100000 + Math.random() * 900000).toString();
-            await updateDoc(docRef, { shortId: shortId });
-        }
-
-        const isAdmin = ADMIN_IDS.includes(shortId);
-        userData.isAdmin = isAdmin;
-        userData.shortId = shortId;
-        await loadGame(userData);
-      } else {
-        // Se a conta existe no Auth, mas não no Firestore, criamos o perfil
-        console.log("Criando novo perfil para o usuário logado.");
-        const shortId = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        const initialData = {
-          username: user.email.split('@')[0], // Pega o nome de usuário do email fictício
-          shortId: shortId,
-          score: 100,
-          inventory: {},
-          capacity: 20,
-          totalItems: 0,
-          expandCost: 100,
-          isAdmin: ADMIN_IDS.includes(shortId)
-        };
-        await setDoc(doc(db, "players", user.uid), initialData);
-        await loadGame(initialData);
-      }
-    } catch (e) {
-      console.error("Erro ao carregar dados do usuário:", e);
-      showMessage("Erro ao carregar seu perfil. Tente novamente.");
-    }
-  } else {
-    currentUserId = null;
-    loginPanel.classList.remove("hidden");
-    gameArea.classList.add("hidden");
-  }
 });
 
 logoutButton.addEventListener("click", async () => {
