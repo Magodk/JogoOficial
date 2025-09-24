@@ -468,7 +468,7 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Gerar e salvar o ID fixo no Firestore imediatamente
+        // CORREÇÃO: Gerar e salvar o ID fixo no Firestore imediatamente após a criação da conta.
         const newAccountId = Math.floor(Math.random() * 900000) + 100000;
         
         const initialData = {
