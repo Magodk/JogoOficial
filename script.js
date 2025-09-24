@@ -70,7 +70,7 @@ let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
 // IDs de administradores para controle de acesso ao painel
-const ADMIN_IDS = ["514710"];
+const ADMIN_IDS = ["SEU_UID_LONGO_AQUI"];
 
 const treasures = [
   { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
@@ -330,24 +330,19 @@ onAuthStateChanged(auth, async (user) => {
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                const shortId = userData.shortId;
-                const isAdmin = ADMIN_IDS.includes(shortId);
-
+                const isAdmin = ADMIN_IDS.includes(currentUserId);
                 userData.isAdmin = isAdmin;
                 await loadGame(userData);
             } else {
-                console.log("Criando perfil para usuário existente no Auth, mas sem perfil no Firestore.");
-                const shortId = Math.floor(100000 + Math.random() * 900000).toString();
-                
+                console.log("Criando novo perfil para o usuário logado.");
                 const initialData = {
                     username: user.email.split('@')[0],
-                    shortId: shortId,
                     score: 100,
                     inventory: {},
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    isAdmin: ADMIN_IDS.includes(shortId)
+                    isAdmin: ADMIN_IDS.includes(user.uid)
                 };
                 await setDoc(doc(db, "players", user.uid), initialData);
                 await loadGame(initialData);
@@ -363,7 +358,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// AQUI ESTÁ A LÓGICA CORRIGIDA PARA REGISTRO
 registerButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -378,17 +372,14 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, emailFicticio, password);
         const userId = userCredential.user.uid;
         
-        const shortId = Math.floor(100000 + Math.random() * 900000).toString();
-
         const initialData = {
             username: username,
-            shortId: shortId,
             score: 100,
             inventory: {},
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            isAdmin: ADMIN_IDS.includes(shortId)
+            isAdmin: ADMIN_IDS.includes(userId)
         };
         await setDoc(doc(db, "players", userId), initialData);
 
@@ -399,7 +390,6 @@ registerButton.addEventListener("click", async () => {
     }
 });
 
-// AQUI ESTÁ A LÓGICA CORRIGIDA PARA LOGIN
 loginButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
