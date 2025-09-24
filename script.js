@@ -391,6 +391,7 @@ async function loadGame(userData) {
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
+    // CORREÇÃO: Lógica para exibir o botão de admin
     if (userData.isAdmin) {
         if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
     } else {
@@ -429,7 +430,7 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
+                    // CORREÇÃO: Verificação de admin com o ID do Firebase
                     isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
                 };
                 await setDoc(docRef, initialData);
@@ -469,7 +470,7 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
+            // CORREÇÃO: Verificação de admin com o ID do Firebase
             isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
         };
 
@@ -499,7 +500,6 @@ loginButton.addEventListener("click", async () => {
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        // Não é mais necessário atualizar aqui, a função onAuthStateChanged faz isso
         showMessage("Login realizado com sucesso!");
     } catch (error) {
         if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
