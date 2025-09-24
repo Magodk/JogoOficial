@@ -70,7 +70,7 @@ let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
 // IDs de administradores para controle de acesso ao painel
-const ADMIN_IDS = ["694045", "id_do_seu_segundo_admin"];
+const ADMIN_IDS = ["694045"];
 
 const treasures = [
   { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
