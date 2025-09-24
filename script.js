@@ -156,7 +156,7 @@ async function populatePlayerList() {
     playerNameSpan.textContent = userData.username;
     playerItem.appendChild(playerNameSpan);
 
-    playerItem.dataset.id = docSnap.id;
+    playerItem.dataset.id = userData.shortId; // Usando o ID curto para o display
     playerItem.dataset.username = userData.username;
     playerItem.addEventListener("click", () => {
       selectPlayer(docSnap.id, userData.username);
@@ -179,7 +179,7 @@ async function selectPlayer(accountId, username) {
 
   const targetUser = docSnap.data();
   playerDetailsName.textContent = selectedPlayerUsername;
-  playerDetailsId.textContent = accountId;
+  playerDetailsId.textContent = targetUser.shortId; // Exibe o ID curto
   playerDetailsScore.textContent = Math.floor(targetUser.score);
 
   playerDetailsPanel.classList.remove("hidden");
@@ -187,7 +187,7 @@ async function selectPlayer(accountId, username) {
 
   document.querySelectorAll(".player-list-item").forEach(item => {
     item.classList.remove("selected");
-    if (item.dataset.id === accountId) {
+    if (item.dataset.id === targetUser.shortId) {
       item.classList.add("selected");
     }
   });
@@ -371,7 +371,7 @@ async function saveGame() {
       username: usernameInput.value,
       isAdmin: ADMIN_IDS.includes(currentUserId)
     };
-    await setDoc(doc(db, "players", currentUserId), userData);
+    await setDoc(doc(db, "players", currentUserId), userData, { merge: true });
     console.log("Jogo salvo com sucesso no Firebase!");
   } catch (e) {
     console.error("Erro ao salvar o jogo:", e);
@@ -386,7 +386,7 @@ async function loadGame(userData) {
   expandCost = userData.expandCost || 100;
 
   usernameDisplay.textContent = userData.username;
-  accountIdDisplay.textContent = currentUserId;
+  accountIdDisplay.textContent = userData.shortId || currentUserId;
 
   loginPanel.classList.add("hidden");
   gameArea.classList.remove("hidden");
@@ -412,12 +412,10 @@ window.addEventListener('beforeunload', async (event) => {
   }
 });
 
-// AQUI ESTÃO OS AJUSTES PARA O LOGIN POR NOME DE USUÁRIO
+// AQUI ESTÃO OS AJUSTES PARA O LOGIN POR NOME DE USUÁRIO E O ID DE 6 DÍGITOS
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUserId = user.uid;
-    // Remova ou comente a linha abaixo para não usar o email como username
-    // usernameInput.value = user.email;
     try {
       const docRef = doc(db, "players", currentUserId);
       const docSnap = await getDoc(docRef);
@@ -425,9 +423,11 @@ onAuthStateChanged(auth, async (user) => {
         await loadGame(docSnap.data());
       } else {
         console.log("Criando novo perfil para o usuário logado.");
-        // O Firebase Auth usa o e-mail, então o username inicial será o e-mail fictício
+        const shortId = Math.floor(100000 + Math.random() * 900000).toString(); // Gera um ID de 6 dígitos
+        
         const initialData = {
-          username: usernameInput.value, // Agora salvamos o nome de usuário puro!
+          username: usernameInput.value,
+          shortId: shortId,
           score: 100,
           inventory: {},
           capacity: 20,
@@ -450,10 +450,8 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 registerButton.addEventListener("click", async () => {
-  // NOVO: Usamos o valor do username como o login e adicionamos um sufixo
   const username = usernameInput.value;
   const password = passwordInput.value;
-  // Criamos um e-mail fictício para o Firebase
   const emailFicticio = `${username}@meujogo.com`;
 
   if (!username || !password || password.length < 6) {
@@ -471,10 +469,8 @@ registerButton.addEventListener("click", async () => {
 });
 
 loginButton.addEventListener("click", async () => {
-  // NOVO: Usamos o valor do username como o login e adicionamos um sufixo
   const username = usernameInput.value;
   const password = passwordInput.value;
-  // Criamos o e-mail fictício para o login
   const emailFicticio = `${username}@meujogo.com`;
 
   if (!username || !password) {
@@ -530,9 +526,8 @@ function createTreasure() {
   treasure.style.position = "absolute";
   treasure.style.top = "-60px";
   const beltRect = conveyorBelt.getBoundingClientRect();
-  const maxLeft = Math.max(beltRect.width - 50, 0);
-  const leftPx = Math.floor(Math.random() * maxLeft);
-  treasure.style.left = leftPx + "px";
+  const centralPosition = (beltRect.width / 2) - 25;
+  treasure.style.left = centralPosition + "px";
 
   treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
   conveyorBelt.appendChild(treasure);
