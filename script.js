@@ -429,7 +429,8 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    isAdmin: (user.email === "dono2@test.com"),
+                    // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
+                    isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
                 };
                 await setDoc(docRef, initialData);
                 await loadGame(initialData);
@@ -468,11 +469,12 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            isAdmin: (user.email === "dono2@test.com"),
+            // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
+            isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
-        usernameDisplay.textContent = username; // ATUALIZA IMEDIATAMENTE
+        usernameDisplay.textContent = username;
 
         showMessage("Conta criada com sucesso! Você será logado automaticamente.");
     } catch (error) {
@@ -497,7 +499,7 @@ loginButton.addEventListener("click", async () => {
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        usernameDisplay.textContent = username; // ATUALIZA IMEDIATAMENTE
+        // Não é mais necessário atualizar aqui, a função onAuthStateChanged faz isso
         showMessage("Login realizado com sucesso!");
     } catch (error) {
         if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
