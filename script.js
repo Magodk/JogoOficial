@@ -3,7 +3,7 @@
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -250,11 +250,11 @@ async function handleAddAdmin() {
 }
 
 async function handleRemoveAdmin() {
+    if (selectedPlayerId === currentUserId) {
+        adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
+        return;
+    }
     try {
-        if (selectedPlayerId === currentUserId) {
-            adminFeedbackMessage.textContent = "Não é possível remover seu próprio status de administrador.";
-            return;
-        }
         const docRef = doc(db, "players", selectedPlayerId);
         await updateDoc(docRef, { isAdmin: false });
         adminFeedbackMessage.textContent = `${selectedPlayerUsername} não é mais um administrador.`;
@@ -413,7 +413,6 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
-// Lista de UIDs de administradores
 const adminUIDs = ["bbGhoIOvqfSO6CNWThwjIL8dRWF2"];
 
 onAuthStateChanged(auth, async (user) => {
@@ -423,12 +422,11 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             
-            // Verifica se o usuário é admin baseado na lista de UIDs
             const isAdmin = adminUIDs.includes(user.uid);
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                userData.isAdmin = isAdmin; // Garante que a permissão seja atualizada no carregamento
+                userData.isAdmin = isAdmin;
                 await loadGame(userData);
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
@@ -535,7 +533,6 @@ function showMessage(text) {
 }
 
 function getRandomTreasure() {
-    // Corrigindo a lógica para a seleção ponderada de tesouros
     const totalChance = treasures.reduce((sum, t) => sum + t.chance, 0);
     let rand = Math.random() * totalChance;
 
@@ -545,7 +542,6 @@ function getRandomTreasure() {
         }
         rand -= t.chance;
     }
-    // Fallback para garantir que um tesouro seja sempre retornado
     return treasures[treasures.length - 1];
 }
 
