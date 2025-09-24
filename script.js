@@ -525,8 +525,10 @@ function createTreasure() {
 
   treasure.style.position = "absolute";
   treasure.style.top = "-60px";
+  
+  // CORREÇÃO: Centraliza a posição horizontal do tesouro
   const beltRect = conveyorBelt.getBoundingClientRect();
-  const centralPosition = (beltRect.width / 2) - 25;
+  const centralPosition = (beltRect.width / 2) - 25; 
   treasure.style.left = centralPosition + "px";
 
   treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
