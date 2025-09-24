@@ -424,7 +424,7 @@ onAuthStateChanged(auth, async (user) => {
                 console.log("Criando novo perfil para o usuário logado.");
                 
                 const initialData = {
-                    username: user.email.split('@')[0], // Usa o nome antes do @ do email como username
+                    username: usernameInput.value || user.email.split('@')[0], 
                     score: 100,
                     inventory: {},
                     capacity: 20,
