@@ -411,6 +411,7 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// Ajuste na lógica de inicialização para evitar a tela de login ao recarregar
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -436,6 +437,9 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
+            // Em caso de erro, mostre a tela de login para que o usuário tente novamente
+            loginPanel.classList.remove("hidden");
+            gameArea.classList.add("hidden");
         }
     } else {
         currentUserId = null;
