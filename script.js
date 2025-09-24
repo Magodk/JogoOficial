@@ -70,7 +70,7 @@ let isViewingOtherPlayer = false;
 let savedAdminState = {};
 
 // IDs de administradores para controle de acesso ao painel
-const ADMIN_IDS = ["x9J583iENbYS9I2WxgFgk6BqbCH3"];
+const ADMIN_IDS = ["SEU_UID_LONGO_AQUI"];
 
 const treasures = [
   { name: "Saco de Moedas", value: 3, auria: 0.1, img: "https://i.imgur.com/Dktretb.png", rarity: "common", chance: 45 },
@@ -157,7 +157,7 @@ async function populatePlayerList() {
     playerNameSpan.textContent = userData.username;
     playerItem.appendChild(playerNameSpan);
 
-    playerItem.dataset.id = userData.shortId; // Usando o ID curto para o display
+    playerItem.dataset.id = docSnap.id; // Agora usa o UID do Firebase
     playerItem.dataset.username = userData.username;
     playerItem.addEventListener("click", () => {
       selectPlayer(docSnap.id, userData.username);
@@ -180,7 +180,7 @@ async function selectPlayer(accountId, username) {
 
   const targetUser = docSnap.data();
   playerDetailsName.textContent = selectedPlayerUsername;
-  playerDetailsId.textContent = targetUser.shortId; // Exibe o ID curto
+  playerDetailsId.textContent = accountId; // Exibe o UID do Firebase
   playerDetailsScore.textContent = Math.floor(targetUser.score);
 
   playerDetailsPanel.classList.remove("hidden");
@@ -188,7 +188,7 @@ async function selectPlayer(accountId, username) {
 
   document.querySelectorAll(".player-list-item").forEach(item => {
     item.classList.remove("selected");
-    if (item.dataset.id === targetUser.shortId) {
+    if (item.dataset.id === accountId) {
       item.classList.add("selected");
     }
   });
@@ -294,7 +294,7 @@ async function loadGame(userData) {
   expandCost = userData.expandCost || 100;
 
   usernameDisplay.textContent = userData.username;
-  accountIdDisplay.textContent = userData.shortId || currentUserId;
+  accountIdDisplay.textContent = currentUserId;
 
   loginPanel.classList.add("hidden");
   gameArea.classList.remove("hidden");
