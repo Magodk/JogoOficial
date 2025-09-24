@@ -368,7 +368,8 @@ async function saveGame() {
             inventory: inventory,
             capacity: capacity,
             totalItems: totalItems,
-            expandCost: expandCost
+            expandCost: expandCost,
+            username: usernameDisplay.textContent // Salvando o nome de usuário atual
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -384,16 +385,8 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username;
+    usernameDisplay.textContent = userData.username; // CARREGANDO DO BANCO DE DADOS
     accountIdDisplay.textContent = currentUserId;
-
-    // Lógica para carregar o nome de usuário corretamente
-    const userDocRef = doc(db, "players", currentUserId);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists()) {
-        const savedUsername = userDocSnap.data().username;
-        usernameDisplay.textContent = savedUsername;
-    }
 
     loginPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
@@ -417,13 +410,6 @@ window.addEventListener('beforeunload', async (event) => {
     if (currentUserId) {
         await saveGame();
     }
-});
-
-// Ajuste na lógica de inicialização para evitar a tela de login ao recarregar
-document.addEventListener("DOMContentLoaded", () => {
-    // Inicialmente esconde a área do jogo e a tela de login para evitar o "pisca-pisca"
-    loginPanel.classList.add("hidden");
-    gameArea.classList.add("hidden");
 });
 
 onAuthStateChanged(auth, async (user) => {
@@ -451,7 +437,6 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
-            // Em caso de erro, mostre a tela de login
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
         }
@@ -668,7 +653,7 @@ function updateInventoryUI() {
         const scoreP = document.querySelector("#inventory-container p.score-display");
         if (scoreP) scoreP.textContent = `Moedas: ${Math.floor(score)}`;
         const userP = document.querySelector("#inventory-container p.username-display");
-        if (userP) userP.textContent = `Usuário: ${usernameInput.value}`;
+        if (userP) userP.textContent = `Usuário: ${usernameDisplay.textContent}`;
         const idP = document.querySelector("#inventory-container p.account-id");
         if (idP) idP.textContent = `ID da Conta: ${accountIdDisplay.textContent}`;
     }
