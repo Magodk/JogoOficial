@@ -420,11 +420,26 @@ onAuthStateChanged(auth, async (user) => {
       const docRef = doc(db, "players", currentUserId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        await loadGame(docSnap.data());
+        const userData = docSnap.data();
+        
+        // CORREÇÃO: Verifica se o ID de 6 dígitos existe e se o usuário é admin
+        const isAdmin = ADMIN_IDS.includes(userData.shortId);
+        
+        // Se o usuário não tiver um shortId, cria e salva
+        if (!userData.shortId) {
+            const newShortId = Math.floor(100000 + Math.random() * 900000).toString();
+            await updateDoc(docRef, { shortId: newShortId });
+            userData.shortId = newShortId;
+        }
+
+        // Carrega o jogo com os dados atualizados, incluindo o status de admin
+        userData.isAdmin = isAdmin;
+        await loadGame(userData);
       } else {
         console.log("Criando novo perfil para o usuário logado.");
         const shortId = Math.floor(100000 + Math.random() * 900000).toString(); // Gera um ID de 6 dígitos
         
+        // CORREÇÃO: A lógica do admin deve usar o shortId
         const initialData = {
           username: usernameInput.value,
           shortId: shortId,
@@ -433,7 +448,7 @@ onAuthStateChanged(auth, async (user) => {
           capacity: 20,
           totalItems: 0,
           expandCost: 100,
-          isAdmin: ADMIN_IDS.includes(currentUserId)
+          isAdmin: ADMIN_IDS.includes(shortId)
         };
         await setDoc(docRef, initialData);
         await loadGame(initialData);
