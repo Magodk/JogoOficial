@@ -153,7 +153,7 @@ async function populatePlayerList() {
         playerNameSpan.textContent = userData.username;
         playerItem.appendChild(playerNameSpan);
 
-        playerItem.dataset.id = docSnap.id; 
+        playerItem.dataset.id = docSnap.id;
         playerItem.dataset.username = userData.username;
         playerItem.addEventListener("click", () => {
             selectPlayer(docSnap.id, userData.username);
@@ -176,7 +176,7 @@ async function selectPlayer(accountId, username) {
 
     const targetUser = docSnap.data();
     playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = accountId; // Exibe o UID do Firebase
+    playerDetailsId.textContent = accountId;
     playerDetailsScore.textContent = Math.floor(targetUser.score);
 
     playerDetailsPanel.classList.remove("hidden");
