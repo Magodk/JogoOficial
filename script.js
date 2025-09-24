@@ -413,14 +413,23 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// Lista de UIDs de administradores
+const adminUIDs = ["bbGhoIOvqfSO6CNWThwjIL8dRWF2"];
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
         try {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
+            
+            // Verifica se o usuário é admin baseado na lista de UIDs
+            const isAdmin = adminUIDs.includes(user.uid);
+
             if (docSnap.exists()) {
-                await loadGame(docSnap.data());
+                const userData = docSnap.data();
+                userData.isAdmin = isAdmin; // Garante que a permissão seja atualizada no carregamento
+                await loadGame(userData);
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
                 const initialData = {
@@ -430,8 +439,7 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
-                    isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
+                    isAdmin: isAdmin,
                 };
                 await setDoc(docRef, initialData);
                 await loadGame(initialData);
@@ -463,6 +471,8 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        const isAdmin = adminUIDs.includes(user.uid);
+
         const initialData = {
             username: username,
             score: 100,
@@ -470,8 +480,7 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            // CORREÇÃO: Usando o UID do Firebase para a permissão de admin
-            isAdmin: (user.uid === "bbGhoIOvqfSO6CNWThwjIL8dRWF2"),
+            isAdmin: isAdmin,
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
