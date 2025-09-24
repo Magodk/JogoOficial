@@ -176,7 +176,7 @@ async function selectPlayer(accountId, username) {
 
     const targetUser = docSnap.data();
     playerDetailsName.textContent = selectedPlayerUsername;
-    playerDetailsId.textContent = accountId; // Exibe o ID do Firebase
+    playerDetailsId.textContent = accountId;
     playerDetailsScore.textContent = Math.floor(targetUser.score);
 
     playerDetailsPanel.classList.remove("hidden");
