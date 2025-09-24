@@ -363,6 +363,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// AQUI ESTÁ A LÓGICA CORRIGIDA PARA REGISTRO
 registerButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
@@ -398,6 +399,7 @@ registerButton.addEventListener("click", async () => {
     }
 });
 
+// AQUI ESTÁ A LÓGICA CORRIGIDA PARA LOGIN
 loginButton.addEventListener("click", async () => {
     const username = usernameInput.value;
     const password = passwordInput.value;
