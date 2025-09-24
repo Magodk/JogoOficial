@@ -2,8 +2,25 @@
 // 1. IMPORTAÇÕES E CONFIGURAÇÕES DO FIREBASE
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -359,6 +376,19 @@ async function handleIncreaseCapacity() {
     }
 }
 
+// ------------------- Funções que evitam troca de ID -------------------
+async function findPlayerDocByEmail(email) {
+    if (!email) return null;
+    const playersCol = collection(db, "players");
+    const q = query(playersCol, where("email", "==", email));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+        const docSnap = snapshot.docs[0];
+        return { id: docSnap.id, data: docSnap.data() };
+    }
+    return null;
+}
+
 // Funções de Login e Salvar
 async function saveGame() {
     if (!currentUserId) return;
@@ -369,8 +399,11 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
+            username: usernameDisplay.textContent || usernameInput.value || null,
+            // mantemos email/uid se já existirem no doc; setDoc com merge:true preserva campos existentes
         };
-        await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
+        // Usar setDoc com merge:true para não sobrescrever campos importantes e evitar erro se doc não existir
+        await setDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
     } catch (e) {
         console.error("Erro ao salvar o jogo:", e);
@@ -384,7 +417,7 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username;
+    usernameDisplay.textContent = userData.username || usernameInput.value || "Jogador";
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
@@ -411,29 +444,39 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// PRINCIPAL: ao detectar auth state, tentamos encontrar doc por email antes de criar um novo documento
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        currentUserId = user.uid;
         try {
-            const docRef = doc(db, "players", currentUserId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                await loadGame(docSnap.data());
+            // 1) primeiro tente achar um doc existente com o mesmo email
+            const existing = await findPlayerDocByEmail(user.email);
+            if (existing) {
+                // Existe documento antigo — reaproveitamos esse ID
+                currentUserId = existing.id;
+                await loadGame(existing.data);
             } else {
-                console.log("Criando novo perfil para o usuário logado.");
-                
-                const initialData = {
-                    username: user.email.split('@')[0], 
-                    score: 100,
-                    inventory: {},
-                    capacity: 20,
-                    totalItems: 0,
-                    expandCost: 100,
-                    isAdmin: (user.email === "dono2@test.com"),
-                };
-                
-                await setDoc(docRef, initialData);
-                await loadGame(initialData);
+                // Não existe doc com esse email: usamos o uid e criamos um doc novo
+                currentUserId = user.uid;
+                const docRef = doc(db, "players", currentUserId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    await loadGame(docSnap.data());
+                } else {
+                    console.log("Criando novo perfil para o usuário logado.");
+                    const initialData = {
+                        username: user.email ? user.email.split('@')[0] : "Jogador",
+                        email: user.email || null,
+                        uid: user.uid,
+                        score: 100,
+                        inventory: {},
+                        capacity: 20,
+                        totalItems: 0,
+                        expandCost: 100,
+                        isAdmin: (user.email === "dono2@test.com"),
+                    };
+                    await setDoc(docRef, initialData, { merge: true });
+                    await loadGame(initialData);
+                }
             }
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
@@ -459,6 +502,7 @@ registerButton.addEventListener("click", async () => {
     try {
         await createUserWithEmailAndPassword(auth, email, password);
         showMessage("Conta criada com sucesso! Você será logado automaticamente.");
+        // onAuthStateChanged cuidará de criar o documento no Firestore (e a nossa lógica evita duplicatas por email)
     } catch (error) {
         if (error.code === 'auth/email-already-in-use') {
             showMessage("Este usuário já existe.");
@@ -482,6 +526,7 @@ loginButton.addEventListener("click", async () => {
     try {
         await signInWithEmailAndPassword(auth, email, password);
         showMessage("Login realizado com sucesso!");
+        // onAuthStateChanged fará o resto (e nossa busca por email evita criar novo doc)
     } catch (error) {
         if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
             showMessage("Usuário ou senha incorretos.");
