@@ -320,42 +320,26 @@ async function handleGiveTreasure() {
     const treasureName = giveTreasureSelect.value;
     const treasureToGive = treasures.find(t => t.name === treasureName);
 
-    if (!treasureToGive) {
-        adminFeedbackMessage.textContent = "Tesouro não encontrado.";
-        return;
-    }
+    if (!treasureToGive) return;
 
     try {
-        const playerDocRef = doc(db, "players", selectedPlayerId);
-        await runTransaction(db, async (transaction) => {
-            const playerDoc = await transaction.get(playerDocRef);
-            if (!playerDoc.exists()) {
-                throw "Jogador não encontrado!";
-            }
-            const currentData = playerDoc.data();
-            const currentInventory = currentData.inventory || {};
-            
-            const treasureKey = treasureToGive.name;
-            const newInventory = { ...currentInventory };
-            
-            if (!newInventory[treasureKey]) {
-                newInventory[treasureKey] = { ...treasureToGive, quantity: 0 };
-            }
-            newInventory[treasureKey].quantity++;
-            
-            const newTotalItems = (currentData.totalItems || 0) + 1;
-            
-            transaction.update(playerDocRef, {
-                inventory: newInventory,
-                totalItems: newTotalItems
-            });
-            updateAdminInventoryUI(newInventory); // Atualiza a UI do admin
+        const docRef = doc(db, "players", selectedPlayerId);
+        const docSnap = await getDoc(docRef);
+        const currentData = docSnap.exists() ? docSnap.data() : {};
+        const currentInventory = currentData.inventory || {};
+        if (!currentInventory[treasureName]) {
+            currentInventory[treasureName] = { ...treasureToGive, quantity: 0 };
+        }
+        currentInventory[treasureName].quantity++;
+        await updateDoc(docRef, {
+            inventory: currentInventory,
+            totalItems: (currentData.totalItems || 0) + 1
         });
-
+        updateAdminInventoryUI(currentInventory);
         adminFeedbackMessage.textContent = `${treasureToGive.name} adicionado ao inventário de ${selectedPlayerUsername}.`;
     } catch (e) {
         console.error("Erro ao dar tesouro:", e);
-        adminFeedbackMessage.textContent = `Erro ao dar tesouro: ${e.message || e}`;
+        adminFeedbackMessage.textContent = "Erro ao dar tesouro.";
     }
 }
 
@@ -436,6 +420,9 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
+// Lista de UIDs de administradores
+const adminUIDs = ["bbGhoIOvqfSO6CNWThwjIL8dRWF2"];
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -443,8 +430,12 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             
+            // Verifica se o usuário é admin baseado na lista de UIDs
+            const isAdmin = adminUIDs.includes(user.uid);
+
             if (docSnap.exists()) {
                 const userData = docSnap.data();
+                userData.isAdmin = isAdmin; // Garante que a permissão seja atualizada no carregamento
                 await loadGame(userData);
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
@@ -455,8 +446,7 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    // Permissão de admin é controlada pelo documento, não por lista estática
-                    isAdmin: false, 
+                    isAdmin: isAdmin,
                 };
                 await setDoc(docRef, initialData);
                 await loadGame(initialData);
@@ -488,6 +478,8 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        const isAdmin = adminUIDs.includes(user.uid);
+
         const initialData = {
             username: username,
             score: 100,
@@ -495,8 +487,7 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            // Permissão de admin é controlada pelo documento, não por lista estática
-            isAdmin: false,
+            isAdmin: isAdmin,
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
