@@ -157,7 +157,7 @@ async function populatePlayerList() {
     playerNameSpan.textContent = userData.username;
     playerItem.appendChild(playerNameSpan);
 
-    playerItem.dataset.id = docSnap.id; // Agora usa o UID do Firebase
+    playerItem.dataset.id = docSnap.id; // Usa o UID do Firebase
     playerItem.dataset.username = userData.username;
     playerItem.addEventListener("click", () => {
       selectPlayer(docSnap.id, userData.username);
@@ -320,7 +320,6 @@ window.addEventListener('beforeunload', async (event) => {
   }
 });
 
-// AQUI ESTÃO AS NOVAS FUNÇÕES DE AUTENTICAÇÃO E CARREGAMENTO DE DADOS
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
