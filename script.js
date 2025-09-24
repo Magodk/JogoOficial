@@ -535,13 +535,18 @@ function showMessage(text) {
 }
 
 function getRandomTreasure() {
-    const rand = Math.random() * 100;
-    let sum = 0;
+    // Corrigindo a lógica para a seleção ponderada de tesouros
+    const totalChance = treasures.reduce((sum, t) => sum + t.chance, 0);
+    let rand = Math.random() * totalChance;
+
     for (let t of treasures) {
-        sum += t.chance;
-        if (rand <= sum) return t;
+        if (rand < t.chance) {
+            return t;
+        }
+        rand -= t.chance;
     }
-    return treasures[0];
+    // Fallback para garantir que um tesouro seja sempre retornado
+    return treasures[treasures.length - 1];
 }
 
 function createTreasure() {
