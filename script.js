@@ -428,7 +428,7 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username; // **Ajuste aqui: carrega o username do Firestore**
+    usernameDisplay.textContent = userData.username; 
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
