@@ -10,7 +10,7 @@
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     display: flex;
-    flex-direction: column; /* Permite que o painel de mídia fique abaixo do de login */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;

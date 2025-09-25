@@ -161,7 +161,7 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
     const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
