@@ -3,7 +3,7 @@
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -160,14 +160,31 @@ async function populatePlayerList() {
     playerListContainer.innerHTML = "";
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
+    const now = Date.now();
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
         const playerItem = document.createElement("div");
         playerItem.classList.add("player-list-item");
 
+        const statusIndicator = document.createElement("span");
+        statusIndicator.classList.add("online-status");
+
+        if (userData.lastOnline) {
+            const lastOnlineTime = userData.lastOnline.toMillis();
+            if (now - lastOnlineTime < onlineThreshold) {
+                statusIndicator.classList.add("online");
+            } else {
+                statusIndicator.classList.add("offline");
+            }
+        } else {
+            statusIndicator.classList.add("offline");
+        }
+
         const playerNameSpan = document.createElement("span");
         playerNameSpan.textContent = userData.username;
+        playerItem.appendChild(statusIndicator);
         playerItem.appendChild(playerNameSpan);
 
         playerItem.dataset.id = docSnap.id;
@@ -394,7 +411,8 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
-            username: usernameDisplay.textContent
+            username: usernameDisplay.textContent,
+            lastOnline: serverTimestamp() // Adiciona ou atualiza o timestamp da última atividade
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -414,10 +432,9 @@ async function loadGame(userData) {
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
-    mediaPanel.classList.add("hidden"); // Esconde o painel de mídia
+    mediaPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
-    // Lógica para exibir o botão de admin
     if (userData.isAdmin) {
         if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
     } else {
@@ -469,13 +486,13 @@ onAuthStateChanged(auth, async (user) => {
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
-            mediaPanel.classList.remove("hidden"); // Mostra o painel de mídia em caso de erro
+            mediaPanel.classList.remove("hidden");
         }
     } else {
         currentUserId = null;
         loginPanel.classList.remove("hidden");
         gameArea.classList.add("hidden");
-        mediaPanel.classList.remove("hidden"); // Mostra o painel de mídia quando deslogado
+        mediaPanel.classList.remove("hidden");
     }
 });
 
@@ -501,6 +518,7 @@ registerButton.addEventListener("click", async () => {
             totalItems: 0,
             expandCost: 100,
             isAdmin: false,
+            lastOnline: serverTimestamp() // Adiciona o timestamp na criação da conta
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
@@ -579,7 +597,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 0) - 25;
+    const centralPosition = (beltRect.width / 2) - 25;
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
@@ -617,32 +635,6 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     updateInventoryUI();
     updateCapacityBar();
     await saveGame();
-
-    const treasureRect = treasureElement.getBoundingClientRect();
-    const inventoryRect = inventoryButton.getBoundingClientRect();
-
-    treasureElement.style.position = "fixed";
-    treasureElement.style.left = treasureRect.left + "px";
-    treasureElement.style.top = treasureRect.top + "px";
-    treasureElement.style.width = treasureRect.width + "px";
-    treasureElement.style.height = treasureRect.height + "px";
-    treasureElement.style.transition = "all 1s ease-in-out";
-    document.body.appendChild(treasureElement);
-
-    const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
-    const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
-
-    requestAnimationFrame(() => {
-        treasureElement.style.left = targetX + "px";
-        treasureElement.style.top = targetY + "px";
-        treasureElement.style.width = "30px";
-        treasureElement.style.height = "30px";
-        treasureElement.style.opacity = "0";
-    });
-
-    setTimeout(() => {
-        if (treasureElement.parentNode) treasureElement.remove();
-    }, 1000);
 }
 
 function updateInventoryUI() {
@@ -813,6 +805,7 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
+// Atualiza o timestamp da última atividade do usuário a cada 60 segundos
 setInterval(async () => {
     if (currentUserId) {
         await saveGame();
