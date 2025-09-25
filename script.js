@@ -3,7 +3,7 @@
 // ==========================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAoHz8j6blx7nQTVxUyOOQ_Mg4MMF2ThGg",
@@ -60,12 +60,6 @@ const infoQuantity = infoModal.querySelector("#info-quantity");
 const infoAuria = infoModal.querySelector("#info-auria");
 const infoValue = infoModal.querySelector("#info-value");
 const sellButton = infoModal.querySelector("#sell-button");
-
-// Variáveis para o novo painel de mídia
-const mediaPanel = document.getElementById("media-panel");
-const eventosImg = document.getElementById("eventos-img");
-const avisosImg = document.getElementById("avisos-img");
-const atualizacaoImg = document.getElementById("atualizacao-img");
 
 let score = 100;
 let inventory = {};
@@ -132,19 +126,6 @@ closeAdminPanelButton.addEventListener("click", () => {
 
 refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
-function updateMediaPanel() {
-    const mediaLinks = {
-        eventos: 'https://i.imgur.com/jWWCR6O.png',
-        avisos: 'https://i.imgur.com/QLf44fs.png',
-        atualizacao: 'https://i.imgur.com/OKs1Zf2.png'
-    };
-    if (eventosImg) eventosImg.src = mediaLinks.eventos;
-    if (avisosImg) avisosImg.src = mediaLinks.avisos;
-    if (atualizacaoImg) atualizacaoImg.src = mediaLinks.atualizacao;
-}
-updateMediaPanel();
-
-
 function populateTreasureSelect() {
     const giveTreasureSelect = document.getElementById("give-treasure-select");
     if (giveTreasureSelect) {
@@ -162,31 +143,14 @@ async function populatePlayerList() {
     playerListContainer.innerHTML = "";
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
-    const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
         const playerItem = document.createElement("div");
         playerItem.classList.add("player-list-item");
 
-        const statusIndicator = document.createElement("span");
-        statusIndicator.classList.add("online-status");
-
-        if (userData.lastOnline) {
-            const lastOnlineTime = userData.lastOnline.toMillis();
-            if (now - lastOnlineTime < onlineThreshold) {
-                statusIndicator.classList.add("online");
-            } else {
-                statusIndicator.classList.add("offline");
-            }
-        } else {
-            statusIndicator.classList.add("offline");
-        }
-
         const playerNameSpan = document.createElement("span");
         playerNameSpan.textContent = userData.username;
-        playerItem.appendChild(statusIndicator);
         playerItem.appendChild(playerNameSpan);
 
         playerItem.dataset.id = docSnap.id;
@@ -231,12 +195,6 @@ async function selectPlayer(accountId, username) {
         <div class="admin-action-wrapper">
             <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
-        </div>
-
-        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
-        <div class="admin-action-wrapper">
-            <select id="give-treasure-select"></select>
-            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
         </div>
 
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
@@ -413,8 +371,7 @@ async function saveGame() {
             capacity: capacity,
             totalItems: totalItems,
             expandCost: expandCost,
-            username: usernameDisplay.textContent,
-            lastOnline: serverTimestamp()
+            username: usernameDisplay.textContent
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -434,9 +391,9 @@ async function loadGame(userData) {
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
-    if (mediaPanel) mediaPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
+    // Lógica para exibir o botão de admin
     if (userData.isAdmin) {
         if (!openAdminPanelButton.parentNode) gameArea.appendChild(openAdminPanelButton);
     } else {
@@ -478,7 +435,6 @@ onAuthStateChanged(auth, async (user) => {
                     totalItems: 0,
                     expandCost: 100,
                     isAdmin: false,
-                    lastOnline: serverTimestamp()
                 };
                 await setDoc(docRef, initialData);
                 userData = initialData;
@@ -489,13 +445,11 @@ onAuthStateChanged(auth, async (user) => {
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
-            if (mediaPanel) mediaPanel.classList.remove("hidden");
         }
     } else {
         currentUserId = null;
         loginPanel.classList.remove("hidden");
         gameArea.classList.add("hidden");
-        if (mediaPanel) mediaPanel.classList.remove("hidden");
     }
 });
 
@@ -521,7 +475,6 @@ registerButton.addEventListener("click", async () => {
             totalItems: 0,
             expandCost: 100,
             isAdmin: false,
-            lastOnline: serverTimestamp()
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
@@ -563,9 +516,6 @@ loginButton.addEventListener("click", async () => {
 
 logoutButton.addEventListener("click", async () => {
     try {
-        if (currentUserId) {
-            await saveGame();
-        }
         await signOut(auth);
         showMessage("Você saiu da sua conta.");
     } catch (error) {
@@ -603,7 +553,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 2) - 25;
+    const centralPosition = (beltRect.width / 0) - 25; // Corrigido
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
@@ -645,18 +595,14 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     const treasureRect = treasureElement.getBoundingClientRect();
     const inventoryRect = inventoryButton.getBoundingClientRect();
 
-    // 1. Prepara a animação (fixa o elemento para movê-lo)
     treasureElement.style.position = "fixed";
     treasureElement.style.left = treasureRect.left + "px";
     treasureElement.style.top = treasureRect.top + "px";
     treasureElement.style.width = treasureRect.width + "px";
     treasureElement.style.height = treasureRect.height + "px";
     treasureElement.style.transition = "all 1s ease-in-out";
-    
-    // Anexa ao body para que o movimento funcione fora da esteira
     document.body.appendChild(treasureElement);
 
-    // 2. Inicia o movimento
     const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
     const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
 
@@ -668,11 +614,8 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
         treasureElement.style.opacity = "0";
     });
 
-    // 3. Remove o elemento após a animação (1 segundo)
     setTimeout(() => {
-        if (treasureElement.parentNode) {
-            treasureElement.remove();
-        }
+        if (treasureElement.parentNode) treasureElement.remove();
     }, 1000);
 }
 
