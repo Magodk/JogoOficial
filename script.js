@@ -134,13 +134,13 @@ refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
 function updateMediaPanel() {
     const mediaLinks = {
-        eventos: 'https://i.imgur.com/jWWCR6O.png',
-        avisos: 'https://i.imgur.com/OKs1Zf2.png',
-        atualizacao: 'https://i.imgur.com/QLf44fs.png'
+        eventos: 'https://i.imgur.com/your-event-image.png',
+        avisos: 'https://i.imgur.com/your-notice-image.png',
+        atualizacao: 'https://i.imgur.com/your-update-image.png'
     };
-    eventosImg.src = mediaLinks.eventos;
-    avisosImg.src = mediaLinks.avisos;
-    atualizacaoImg.src = mediaLinks.atualizacao;
+    if (eventosImg) eventosImg.src = mediaLinks.eventos;
+    if (avisosImg) avisosImg.src = mediaLinks.avisos;
+    if (atualizacaoImg) atualizacaoImg.src = mediaLinks.atualizacao;
 }
 
 function populateTreasureSelect() {
@@ -161,7 +161,7 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
     const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
@@ -412,7 +412,7 @@ async function saveGame() {
             totalItems: totalItems,
             expandCost: expandCost,
             username: usernameDisplay.textContent,
-            lastOnline: serverTimestamp() // Adiciona ou atualiza o timestamp da última atividade
+            lastOnline: serverTimestamp()
         };
         await updateDoc(doc(db, "players", currentUserId), userData, { merge: true });
         console.log("Jogo salvo com sucesso no Firebase!");
@@ -432,7 +432,7 @@ async function loadGame(userData) {
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
-    mediaPanel.classList.add("hidden");
+    if (mediaPanel) mediaPanel.classList.add("hidden");
     gameArea.classList.remove("hidden");
 
     if (userData.isAdmin) {
@@ -476,6 +476,7 @@ onAuthStateChanged(auth, async (user) => {
                     totalItems: 0,
                     expandCost: 100,
                     isAdmin: false,
+                    lastOnline: serverTimestamp()
                 };
                 await setDoc(docRef, initialData);
                 userData = initialData;
@@ -486,13 +487,13 @@ onAuthStateChanged(auth, async (user) => {
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
-            mediaPanel.classList.remove("hidden");
+            if (mediaPanel) mediaPanel.classList.remove("hidden");
         }
     } else {
         currentUserId = null;
         loginPanel.classList.remove("hidden");
         gameArea.classList.add("hidden");
-        mediaPanel.classList.remove("hidden");
+        if (mediaPanel) mediaPanel.classList.remove("hidden");
     }
 });
 
@@ -518,7 +519,7 @@ registerButton.addEventListener("click", async () => {
             totalItems: 0,
             expandCost: 100,
             isAdmin: false,
-            lastOnline: serverTimestamp() // Adiciona o timestamp na criação da conta
+            lastOnline: serverTimestamp()
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
@@ -560,6 +561,9 @@ loginButton.addEventListener("click", async () => {
 
 logoutButton.addEventListener("click", async () => {
     try {
+        if (currentUserId) {
+            await saveGame();
+        }
         await signOut(auth);
         showMessage("Você saiu da sua conta.");
     } catch (error) {
@@ -805,7 +809,6 @@ function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
 }
 
-// Atualiza o timestamp da última atividade do usuário a cada 60 segundos
 setInterval(async () => {
     if (currentUserId) {
         await saveGame();
