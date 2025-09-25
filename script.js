@@ -134,15 +134,14 @@ refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
 function updateMediaPanel() {
     const mediaLinks = {
-        eventos: 'https://i.imgur.com/jWWCR6O.png', // NOVO LINK CORRETO
-        avisos: 'https://i.imgur.com/QLf44fs.png', // NOVO LINK CORRETO
-        atualizacao: 'https://i.imgur.com/OKs1Zf2.png' // NOVO LINK CORRETO
+        eventos: 'https://i.imgur.com/jWWCR6O.png',
+        avisos: 'https://i.imgur.com/QLf44fs.png',
+        atualizacao: 'https://i.imgur.com/OKs1Zf2.png'
     };
     if (eventosImg) eventosImg.src = mediaLinks.eventos;
     if (avisosImg) avisosImg.src = mediaLinks.avisos;
     if (atualizacaoImg) atualizacaoImg.src = mediaLinks.atualizacao;
 }
-// Chamar a função no início para carregar as imagens
 updateMediaPanel();
 
 
@@ -646,14 +645,18 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     const treasureRect = treasureElement.getBoundingClientRect();
     const inventoryRect = inventoryButton.getBoundingClientRect();
 
+    // 1. Prepara a animação (fixa o elemento para movê-lo)
     treasureElement.style.position = "fixed";
     treasureElement.style.left = treasureRect.left + "px";
     treasureElement.style.top = treasureRect.top + "px";
     treasureElement.style.width = treasureRect.width + "px";
     treasureElement.style.height = treasureRect.height + "px";
     treasureElement.style.transition = "all 1s ease-in-out";
+    
+    // Anexa ao body para que o movimento funcione fora da esteira
     document.body.appendChild(treasureElement);
 
+    // 2. Inicia o movimento
     const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
     const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
 
@@ -665,9 +668,10 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
         treasureElement.style.opacity = "0";
     });
 
+    // 3. Remove o elemento após a animação (1 segundo)
     setTimeout(() => {
         if (treasureElement.parentNode) {
-            treasureElement.remove(); // Esta linha agora garante a remoção do tesouro
+            treasureElement.remove();
         }
     }, 1000);
 }
