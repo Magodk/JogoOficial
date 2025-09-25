@@ -21,20 +21,6 @@
         <p id="message"></p>
     </div>
 
-    <div id="media-panel">
-        <div class="media-item">
-            <img id="eventos-img" src="https://i.imgur.com/your-event-image.png" alt="Eventos">
-            <p>EVENTOS</p>
-        </div>
-        <div class="media-item">
-            <img id="avisos-img" src="https://i.imgur.com/your-notice-image.png" alt="Avisos">
-            <p>AVISOS</p>
-        </div>
-        <div class="media-item">
-            <img id="atualizacao-img" src="https://i.imgur.com/your-update-image.png" alt="Atualização">
-            <p>ATUALIZAÇÃO</p>
-        </div>
-    </div>
     <div id="game-area" class="game-area hidden">
         <div class="game-border">
             <div class="game-container">
@@ -82,23 +68,19 @@
                     <p>Moedas: <span id="player-details-score"></span></p>
                     
                     <div class="admin-command-section">
-                        <h4 class="admin-panel-subtitle">Dar Moedas</h4>
-                        <div class="admin-action-wrapper">
-                            <input type="number" id="give-coins-input" placeholder="Quantidade">
-                            <button id="give-coins-button" class="admin-action-button">Confirmar</button>
-                        </div>
+                        <h4>Dar Moedas</h4>
+                        <input type="number" id="give-coins-input" placeholder="Quantidade">
+                        <button id="give-coins-button" class="admin-action-button">Confirmar</button>
                     </div>
 
                     <div class="admin-command-section">
-                        <h4 class="admin-panel-subtitle">Dar Tesouro</h4>
-                        <div class="admin-action-wrapper">
-                            <select id="give-treasure-select"></select>
-                            <button id="give-treasure-button" class="admin-action-button">Confirmar</button>
-                        </div>
+                        <h4>Dar Tesouro</h4>
+                        <select id="give-treasure-select"></select>
+                        <button id="give-treasure-button" class="admin-action-button">Confirmar</button>
                     </div>
 
                     <div id="admin-player-inventory-view">
-                        <h4 class="admin-panel-subtitle">Inventário</h4>
+                        <h4>Inventário</h4>
                         <div id="admin-inventory-items" class="inventory-items"></div>
                     </div>
                 </div>
