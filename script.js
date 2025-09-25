@@ -231,12 +231,6 @@ async function selectPlayer(accountId, username) {
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
         </div>
 
-        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
-        <div class="admin-action-wrapper">
-            <select id="give-treasure-select"></select>
-            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
-        </div>
-
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
         <div class="admin-action-wrapper">
             <button id="delete-account-button" class="admin-action-button delete-account-button">Excluir Conta Permanentemente</button>
@@ -601,7 +595,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 2) - 25;
+    const centralPosition = (beltRect.width / 0) - 25;
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
