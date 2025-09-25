@@ -161,7 +161,7 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
     const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
@@ -229,6 +229,12 @@ async function selectPlayer(accountId, username) {
         <div class="admin-action-wrapper">
             <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
+        </div>
+
+        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
+        <div class="admin-action-wrapper">
+            <select id="give-treasure-select"></select>
+            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
         </div>
 
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
@@ -422,7 +428,7 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username; 
+    usernameDisplay.textContent = userData.username;
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
@@ -595,7 +601,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 0) - 25;
+    const centralPosition = (beltRect.width / 2) - 25;
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
@@ -633,6 +639,32 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     updateInventoryUI();
     updateCapacityBar();
     await saveGame();
+
+    const treasureRect = treasureElement.getBoundingClientRect();
+    const inventoryRect = inventoryButton.getBoundingClientRect();
+
+    treasureElement.style.position = "fixed";
+    treasureElement.style.left = treasureRect.left + "px";
+    treasureElement.style.top = treasureRect.top + "px";
+    treasureElement.style.width = treasureRect.width + "px";
+    treasureElement.style.height = treasureRect.height + "px";
+    treasureElement.style.transition = "all 1s ease-in-out";
+    document.body.appendChild(treasureElement);
+
+    const targetX = inventoryRect.left + inventoryRect.width / 2 - treasureRect.width / 2;
+    const targetY = inventoryRect.top + inventoryRect.height / 2 - treasureRect.height / 2;
+
+    requestAnimationFrame(() => {
+        treasureElement.style.left = targetX + "px";
+        treasureElement.style.top = targetY + "px";
+        treasureElement.style.width = "30px";
+        treasureElement.style.height = "30px";
+        treasureElement.style.opacity = "0";
+    });
+
+    setTimeout(() => {
+        if (treasureElement.parentNode) treasureElement.remove();
+    }, 1000);
 }
 
 function updateInventoryUI() {
