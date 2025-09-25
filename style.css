@@ -504,11 +504,11 @@ button#buy-button, #sell-button, #expand-capacity {
 }
 
 .online {
-    background-color: #2ecc71; /* Cor verde para online */
+    background-color: #2ecc71;
 }
 
 .offline {
-    background-color: #95a5a6; /* Cor cinza para offline */
+    background-color: #95a5a6;
 }
 
 .player-details-panel {

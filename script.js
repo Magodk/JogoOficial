@@ -161,7 +161,7 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
     const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
@@ -428,7 +428,7 @@ async function loadGame(userData) {
     totalItems = userData.totalItems || 0;
     expandCost = userData.expandCost || 100;
 
-    usernameDisplay.textContent = userData.username;
+    usernameDisplay.textContent = userData.username; // **Ajuste aqui: carrega o username do Firestore**
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
