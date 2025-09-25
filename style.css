@@ -10,6 +10,7 @@
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
@@ -17,15 +18,6 @@ body {
     overflow: hidden;
     background-color: #0d1117;
     color: #f0f6fc;
-}
-
-/* NOVO: Wrapper para centralizar Banners e Login Panel juntos */
-#login-screen-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 95%; /* Garante que não ultrapasse a tela */
-    max-width: 800px; /* Limite máximo para desktop */
 }
 
 /* Oculta a área do jogo, o painel de mídia e o painel de admin */
@@ -48,7 +40,6 @@ body {
     border: 1px solid #30363d;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    margin-bottom: 20px; /* Adicionado para separar do que vier abaixo */
 }
 
 .login-panel h2 {
@@ -112,7 +103,6 @@ body {
     margin-left: 5px;
 }
 
-/* Estilos de Mídia (Mantidos, mas não visíveis no seu HTML fornecido) */
 #media-panel {
     display: flex;
     justify-content: center;
@@ -144,48 +134,7 @@ body {
 }
 
 /* ==========================================================
-// 2.5. Banners de Informação no Login (ADICIONADO)
-// ========================================================== */
-
-#info-banners-container {
-    width: 100%; /* Ocupa a largura total do #login-screen-wrapper (max 800px) */
-    display: flex; 
-    justify-content: space-between; 
-    gap: 15px;
-    margin-bottom: 25px; /* Espaço entre banners e formulário de login */
-}
-
-.banner-item {
-    width: calc(33.33% - 10px); /* 1/3 da largura menos o espaçamento */
-    text-align: center;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.3s ease, box-shadow 0.3s ease; 
-}
-
-.banner-item:hover {
-    transform: translateY(-5px); 
-    box-shadow: 0 8px 20px rgba(88, 166, 255, 0.2); 
-}
-
-.banner-item img {
-    width: 100%; 
-    height: auto; 
-    display: block; 
-    border-radius: 8px; 
-    border: 1px solid #30363d;
-    user-select: none; 
-}
-
-.banner-item p {
-    margin-top: 5px;
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #58a6ff; 
-}
-
-/* ==========================================================
-// 3. Estilos da Área do Jogo (Mantidos)
+// 3. Estilos da Área do Jogo
 // ========================================================== */
 .game-area {
     position: relative;
@@ -286,7 +235,7 @@ body {
 }
 
 /* ==========================================================
-// 4. Inventário e Modais (Mantidos)
+// 4. Inventário e Modais
 // ========================================================== */
 .inventory-container {
     position: absolute;
@@ -474,7 +423,7 @@ button#buy-button, #sell-button, #expand-capacity {
 .logout-button:hover { background-color: #e74c3c; }
 
 /* ==========================================================
-// 5. Estilos do Painel de Admin (Mantidos)
+// 5. Estilos do Painel de Admin
 // ========================================================== */
 .new-admin-panel {
     position: fixed;
@@ -662,25 +611,6 @@ button#buy-button, #sell-button, #expand-capacity {
 // 6. Responsividade
 // ========================================================== */
 @media (max-width: 768px) {
-    /* Ajuste de responsividade para os banners */
-    #info-banners-container {
-        /* Banners ficam empilhados */
-        flex-direction: column; 
-        align-items: center;
-        gap: 10px;
-    }
-
-    .banner-item {
-        /* Ocupa a largura total do container */
-        width: 90%; 
-        max-width: 400px;
-    }
-    
-    .banner-item:hover {
-        /* Ajusta o hover para a versão em coluna */
-        transform: scale(1.02);
-    }
-    
     .login-panel { max-width: 95%; padding: 20px; }
     #media-panel { flex-direction: column; align-items: center; }
     .game-border { max-width: 98%; height: 95vh; }
