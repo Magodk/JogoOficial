@@ -196,6 +196,11 @@ async function selectPlayer(accountId, username) {
             <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
         </div>
+        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
+        <div class="admin-action-wrapper">
+            <select id="give-treasure-select"></select>
+            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
+        </div>
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
         <div class="admin-action-wrapper">
             <button id="delete-account-button" class="admin-action-button delete-account-button">Excluir Conta Permanentemente</button>
@@ -212,6 +217,7 @@ async function selectPlayer(accountId, username) {
 
     populateTreasureSelect();
     document.getElementById("give-coins-button").addEventListener("click", handleGiveCoins);
+    document.getElementById("give-treasure-button").addEventListener("click", handleGiveTreasure);
     document.getElementById("delete-account-button").onclick = handleDeleteAccount;
     document.getElementById("add-admin-button").onclick = handleAddAdmin;
     document.getElementById("remove-admin-button").onclick = handleRemoveAdmin;
@@ -413,9 +419,6 @@ window.addEventListener('beforeunload', async (event) => {
     }
 });
 
-// Lista de UIDs de administradores
-const adminUIDs = ["bbGhoIOvqfSO6CNWThwjIL8dRWF2"];
-
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUserId = user.uid;
@@ -423,13 +426,9 @@ onAuthStateChanged(auth, async (user) => {
             const docRef = doc(db, "players", currentUserId);
             const docSnap = await getDoc(docRef);
             
-            // Verifica se o usuário é admin baseado na lista de UIDs
-            const isAdmin = adminUIDs.includes(user.uid);
-
+            let userData;
             if (docSnap.exists()) {
-                const userData = docSnap.data();
-                userData.isAdmin = isAdmin; // Garante que a permissão seja atualizada no carregamento
-                await loadGame(userData);
+                userData = docSnap.data();
             } else {
                 console.log("Criando novo perfil para o usuário logado.");
                 const initialData = {
@@ -439,11 +438,12 @@ onAuthStateChanged(auth, async (user) => {
                     capacity: 20,
                     totalItems: 0,
                     expandCost: 100,
-                    isAdmin: isAdmin,
+                    isAdmin: false,
                 };
                 await setDoc(docRef, initialData);
-                await loadGame(initialData);
+                userData = initialData;
             }
+            await loadGame(userData);
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
@@ -471,8 +471,6 @@ registerButton.addEventListener("click", async () => {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        const isAdmin = adminUIDs.includes(user.uid);
-
         const initialData = {
             username: username,
             score: 100,
@@ -480,7 +478,7 @@ registerButton.addEventListener("click", async () => {
             capacity: 20,
             totalItems: 0,
             expandCost: 100,
-            isAdmin: isAdmin,
+            isAdmin: false,
         };
 
         await setDoc(doc(db, "players", user.uid), initialData);
@@ -535,7 +533,6 @@ function showMessage(text) {
 }
 
 function getRandomTreasure() {
-    // Corrigindo a lógica para a seleção ponderada de tesouros
     const totalChance = treasures.reduce((sum, t) => sum + t.chance, 0);
     let rand = Math.random() * totalChance;
 
@@ -545,7 +542,6 @@ function getRandomTreasure() {
         }
         rand -= t.chance;
     }
-    // Fallback para garantir que um tesouro seja sempre retornado
     return treasures[treasures.length - 1];
 }
 
@@ -561,7 +557,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 0) - 25;
+    const centralPosition = (beltRect.width / 2) - 25; // Corrigido
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
