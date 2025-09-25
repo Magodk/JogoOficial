@@ -196,11 +196,7 @@ async function selectPlayer(accountId, username) {
             <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
         </div>
-        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
-        <div class="admin-action-wrapper">
-            <select id="give-treasure-select"></select>
-            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
-        </div>
+
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
         <div class="admin-action-wrapper">
             <button id="delete-account-button" class="admin-action-button delete-account-button">Excluir Conta Permanentemente</button>
