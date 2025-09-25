@@ -161,7 +161,7 @@ async function populatePlayerList() {
     const playersCol = collection(db, "players");
     const playerSnapshot = await getDocs(playersCol);
     const now = Date.now();
-    const onlineThreshold = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const onlineThreshold = 5 * 60 * 1000; // 5 minutos em milissegundos
 
     playerSnapshot.forEach(docSnap => {
         const userData = docSnap.data();
@@ -663,7 +663,9 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
     });
 
     setTimeout(() => {
-        if (treasureElement.parentNode) treasureElement.remove();
+        if (treasureElement.parentNode) {
+            treasureElement.remove(); // Esta linha estava faltando
+        }
     }, 1000);
 }
 
