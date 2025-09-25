@@ -20,7 +20,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ==========================================================
-// 2. VARIÁVEIS E ELEMENTOS DO DOM
+// 2. VARIÁVEIS E ELEMENTOS DO DOM (ATUALIZADO)
 // ==========================================================
 const loginPanel = document.getElementById("login-panel");
 const gameArea = document.getElementById("game-area");
@@ -61,7 +61,12 @@ const infoAuria = infoModal.querySelector("#info-auria");
 const infoValue = infoModal.querySelector("#info-value");
 const sellButton = infoModal.querySelector("#sell-button");
 
-// Variáveis para o novo painel de mídia
+// Variáveis para os Banners de Informação (ADICIONADO)
+const bannerAvisos = document.getElementById('banner-avisos');
+const bannerEvento = document.getElementById('banner-evento');
+const bannerAtualizacao = document.getElementById('banner-atualizacao');
+
+// Variáveis para o novo painel de mídia (mantido, embora não esteja no HTML fornecido)
 const mediaPanel = document.getElementById("media-panel");
 const eventosImg = document.getElementById("eventos-img");
 const avisosImg = document.getElementById("avisos-img");
@@ -434,7 +439,8 @@ async function loadGame(userData) {
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
-    if (mediaPanel) mediaPanel.classList.add("hidden");
+    // Removido o if (mediaPanel), pois o painel de login e os banners devem sumir juntos,
+    // e os banners estão no mesmo contexto que o loginPanel no novo HTML.
     gameArea.classList.remove("hidden");
 
     if (userData.isAdmin) {
@@ -459,6 +465,8 @@ window.addEventListener('beforeunload', async (event) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+    // Escondemos o wrapper dos banners se o usuário logar
+    const loginWrapper = document.getElementById("login-screen-wrapper"); 
     if (user) {
         currentUserId = user.uid;
         try {
@@ -483,19 +491,18 @@ onAuthStateChanged(auth, async (user) => {
                 await setDoc(docRef, initialData);
                 userData = initialData;
             }
+            if (loginWrapper) loginWrapper.classList.add("hidden"); // Esconde tudo de uma vez
             await loadGame(userData);
         } catch (e) {
             console.error("Erro ao carregar dados do usuário:", e);
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
-            loginPanel.classList.remove("hidden");
+            if (loginWrapper) loginWrapper.classList.remove("hidden");
             gameArea.classList.add("hidden");
-            if (mediaPanel) mediaPanel.classList.remove("hidden");
         }
     } else {
         currentUserId = null;
-        loginPanel.classList.remove("hidden");
+        if (loginWrapper) loginWrapper.classList.remove("hidden"); // Mostra tudo de uma vez
         gameArea.classList.add("hidden");
-        if (mediaPanel) mediaPanel.classList.remove("hidden");
     }
 });
 
@@ -806,7 +813,36 @@ closeInventoryButton.addEventListener("click", () => {
 closePurchaseButton.addEventListener("click", () => purchaseModal.classList.remove("open"));
 closeInfoButton.addEventListener("click", () => infoModal.classList.remove("open"));
 
-// GAME LOOP
+
+// ==========================================================
+// 3. EVENTOS DE CLIQUE DOS BANNERS (NOVA SEÇÃO)
+// ==========================================================
+document.addEventListener('DOMContentLoaded', () => {
+    if (bannerAvisos) {
+        bannerAvisos.addEventListener('click', () => {
+            console.log('Banner de Avisos clicado!');
+            alert('Avisos: Leia as regras e os comunicados importantes do jogo.');
+        });
+    }
+
+    if (bannerEvento) {
+        bannerEvento.addEventListener('click', () => {
+            console.log('Banner de Evento clicado!');
+            alert('Evento: Um novo evento está ativo! Não perca as recompensas exclusivas!');
+        });
+    }
+
+    if (bannerAtualizacao) {
+        bannerAtualizacao.addEventListener('click', () => {
+            console.log('Banner de Atualização clicado!');
+            alert('Atualização: Confira as notas de patch e as novidades da última versão.');
+        });
+    }
+});
+
+// ==========================================================
+// 4. GAME LOOP (Mantido)
+// ==========================================================
 function gameLoop(currentTime) {
     if (!lastFrameTime) lastFrameTime = currentTime;
 
