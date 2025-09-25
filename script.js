@@ -61,6 +61,12 @@ const infoAuria = infoModal.querySelector("#info-auria");
 const infoValue = infoModal.querySelector("#info-value");
 const sellButton = infoModal.querySelector("#sell-button");
 
+// Variáveis para o novo painel de mídia
+const mediaPanel = document.getElementById("media-panel");
+const eventosImg = document.getElementById("eventos-img");
+const avisosImg = document.getElementById("avisos-img");
+const atualizacaoImg = document.getElementById("atualizacao-img");
+
 let score = 100;
 let inventory = {};
 let capacity = 20;
@@ -125,6 +131,17 @@ closeAdminPanelButton.addEventListener("click", () => {
 });
 
 refreshPlayerListButton.addEventListener("click", populatePlayerList);
+
+function updateMediaPanel() {
+    const mediaLinks = {
+        eventos: 'https://i.imgur.com/your-event-image.png',
+        avisos: 'https://i.imgur.com/your-notice-image.png',
+        atualizacao: 'https://i.imgur.com/your-update-image.png'
+    };
+    eventosImg.src = mediaLinks.eventos;
+    avisosImg.src = mediaLinks.avisos;
+    atualizacaoImg.src = mediaLinks.atualizacao;
+}
 
 function populateTreasureSelect() {
     const giveTreasureSelect = document.getElementById("give-treasure-select");
@@ -195,6 +212,12 @@ async function selectPlayer(accountId, username) {
         <div class="admin-action-wrapper">
             <input type="number" id="give-coins-input" placeholder="Quant. de moedas">
             <button id="give-coins-button" class="admin-action-button">Dar Moedas</button>
+        </div>
+
+        <h3 class="admin-panel-subtitle">Dar Tesouros:</h3>
+        <div class="admin-action-wrapper">
+            <select id="give-treasure-select"></select>
+            <button id="give-treasure-button" class="admin-action-button">Dar Tesouro</button>
         </div>
 
         <h3 class="admin-panel-subtitle">Ações de Conta:</h3>
@@ -391,6 +414,7 @@ async function loadGame(userData) {
     accountIdDisplay.textContent = currentUserId;
 
     loginPanel.classList.add("hidden");
+    mediaPanel.classList.add("hidden"); // Esconde o painel de mídia
     gameArea.classList.remove("hidden");
 
     // Lógica para exibir o botão de admin
@@ -445,11 +469,13 @@ onAuthStateChanged(auth, async (user) => {
             showMessage("Erro ao carregar seu perfil. Tente novamente.");
             loginPanel.classList.remove("hidden");
             gameArea.classList.add("hidden");
+            mediaPanel.classList.remove("hidden"); // Mostra o painel de mídia em caso de erro
         }
     } else {
         currentUserId = null;
         loginPanel.classList.remove("hidden");
         gameArea.classList.add("hidden");
+        mediaPanel.classList.remove("hidden"); // Mostra o painel de mídia quando deslogado
     }
 });
 
@@ -553,7 +579,7 @@ function createTreasure() {
     treasure.style.position = "absolute";
     treasure.style.top = "-60px";
     const beltRect = conveyorBelt.getBoundingClientRect();
-    const centralPosition = (beltRect.width / 0) - 25; // Corrigido
+    const centralPosition = (beltRect.width / 2) - 25;
     treasure.style.left = centralPosition + "px";
 
     treasure.innerHTML = `<img src="${treasureData.img}" alt="${treasureData.name}"><div class="treasure-info">💰 ${treasureData.value} | ⚡ ${treasureData.auria}/s</div>`;
