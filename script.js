@@ -134,14 +134,17 @@ refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
 function updateMediaPanel() {
     const mediaLinks = {
-        eventos: 'https://i.imgur.com/your-event-image.png',
-        avisos: 'https://i.imgur.com/your-notice-image.png',
-        atualizacao: 'https://i.imgur.com/your-update-image.png'
+        eventos: 'https://i.imgur.com/jWWCR6O.png', // NOVO LINK CORRETO
+        avisos: 'https://i.imgur.com/QLf44fs.png', // NOVO LINK CORRETO
+        atualizacao: 'https://i.imgur.com/OKs1Zf2.png' // NOVO LINK CORRETO
     };
     if (eventosImg) eventosImg.src = mediaLinks.eventos;
     if (avisosImg) avisosImg.src = mediaLinks.avisos;
     if (atualizacaoImg) atualizacaoImg.src = mediaLinks.atualizacao;
 }
+// Chamar a função no início para carregar as imagens
+updateMediaPanel();
+
 
 function populateTreasureSelect() {
     const giveTreasureSelect = document.getElementById("give-treasure-select");
@@ -664,7 +667,7 @@ async function buyTreasureWithAnimation(treasureElement, treasureData) {
 
     setTimeout(() => {
         if (treasureElement.parentNode) {
-            treasureElement.remove(); // Esta linha estava faltando
+            treasureElement.remove(); // Esta linha agora garante a remoção do tesouro
         }
     }, 1000);
 }
