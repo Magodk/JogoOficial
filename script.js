@@ -134,9 +134,9 @@ refreshPlayerListButton.addEventListener("click", populatePlayerList);
 
 function updateMediaPanel() {
     const mediaLinks = {
-        eventos: 'https://i.imgur.com/your-event-image.png',
-        avisos: 'https://i.imgur.com/your-notice-image.png',
-        atualizacao: 'https://i.imgur.com/your-update-image.png'
+        eventos: 'https://i.imgur.com/jWWCR6O.png',
+        avisos: 'https://i.imgur.com/OKs1Zf2.png',
+        atualizacao: 'https://i.imgur.com/QLf44fs.png'
     };
     eventosImg.src = mediaLinks.eventos;
     avisosImg.src = mediaLinks.avisos;
